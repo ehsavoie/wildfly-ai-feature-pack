@@ -13,5 +13,13 @@
     <dependencies>
         <layer name="ai"/>
     </dependencies>
-    <!-- TODO ADD THE content retriever -->
+    <feature spec="subsystem.ai">
+        <feature spec="subsystem.ai.embedding-store-content-retriever">
+            <param name="embedding-store-content-retriever" value="myretriever"/>
+            <param name="embedding-model" value="myembedding"/>
+            <param name="embedding-store" value="mystore"/>
+            <param name="max-results" value="2"/>
+            <param name="min-score" value="0.7"/>
+        </feature>
+    </feature>
 </layer-spec>

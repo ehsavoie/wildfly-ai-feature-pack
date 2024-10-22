@@ -16,11 +16,10 @@
         <package name="dev.langchain4j.ollama"/>
     </packages>
     <feature spec="subsystem.ai">
-        <feature spec="subsystem.ai.ollama-chat-model">
-            <param name="ollama-chat-model" value="mychat"/>
+        <feature spec="subsystem.ai.ollama-embedding-model">
+            <param name="ollama-embedding-model" value="myembedding"/>
             <param name="base-url" value="http://127.0.0.1:11434"/>
             <param name="model-name" value="llama3:8b"/>
-            <param name="temperature" value="0.9"/>
             <param name="log-requests" value="true"/>
             <param name="log-responses" value="true"/>
         </feature>

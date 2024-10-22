@@ -15,4 +15,10 @@
     <packages>
         <package name="dev.langchain4j.web-search-engines"/>
     </packages>
+    <feature spec="subsystem.ai">
+        <feature spec="subsystem.ai.web-search-content-retriever">
+            <param name="web-search-content-retriever" value="myretriever" />
+            <param name="tavily" value="{api-key=${env.TAVILY_API_KEY}, base-url=https://api.tavily.com, connect-timeout=20000, exclude-domains=[example.org], include-domains=[example.com], include-answer=true}"/>
+        </feature>
+    </feature>
 </layer-spec>

@@ -3,10 +3,10 @@
 ~ Copyright The WildFly Authors
 ~ SPDX-License-Identifier: Apache-2.0
 -->
-<layer-spec xmlns="urn:jboss:galleon:layer-spec:2.0" name="ollama">
+<layer-spec xmlns="urn:jboss:galleon:layer-spec:2.0" name="ollama-chat-model">
     <props>
         <prop name="org.wildfly.rule.add-on-depends-on" value="only:ai"/>
-        <prop name="org.wildfly.rule.add-on" value="ai-llm,ollama"/>
+        <prop name="org.wildfly.rule.add-on" value="ai-llm,ollama-chat-model"/>
         <prop name="org.wildfly.rule.add-on-description" value="Use ollama for LLM interactions and embeddings"/>
     </props>
     <dependencies>
@@ -19,7 +19,7 @@
         <feature spec="subsystem.ai.ollama-chat-model">
             <param name="ollama-chat-model" value="mychat"/>
             <param name="base-url" value="http://127.0.0.1:11434"/>
-            <param name="model-name" value="llama3:8b"/>
+            <param name="model-name" value="llama3.1:8b"/>
             <param name="temperature" value="0.9"/>
             <param name="log-requests" value="true"/>
             <param name="log-responses" value="true"/>

@@ -6,10 +6,16 @@
 <layer-spec xmlns="urn:jboss:galleon:layer-spec:2.0" name="in-memory-embedding-store">
     <props>
         <prop name="org.wildfly.rule.add-on-depends-on" value="only:ai"/>
-        <prop name="org.wildfly.rule.add-on" value="ai-embedding-store,in-memory"/>
+        <prop name="org.wildfly.rule.add-on" value="ai-embedding-store,in-memory-embedding-store"/>
         <prop name="org.wildfly.rule.add-on-description" value="Use an in memory embedding store"/>
     </props>
     <dependencies>
         <layer name="ai"/>
     </dependencies>
+    <feature spec="subsystem.ai">
+        <feature spec="subsystem.ai.in-memory-embedding-store">
+            <param name="in-memory-embedding-store" value="mystore"/>
+            <param name="file" value="/home/ehugonne/dev/AI/crawler/crawler/wildfly-admin-embeddings.json"/>
+        </feature>
+    </feature>
 </layer-spec>
