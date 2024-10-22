@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright The WildFly Authors
+  ~ SPDX-License-Identifier: Apache-2.0
+  -->
+<layer-spec xmlns="urn:jboss:galleon:layer-spec:2.0" name="ai-llm">
+    <props>
+        <prop name="org.wildfly.rule.class" value="dev.langchain4j.model.chat.ChatLanguageModel"/>
+        <prop name="org.wildfly.rule.expect-add-on-family" value="ai-llm"/>
+        <prop name="org.wildfly.rule.kind" value="metadata-only"/>
+    </props>
+</layer-spec>

@@ -6,8 +6,9 @@
 <layer-spec xmlns="urn:jboss:galleon:layer-spec:2.0" name="weaviate">
     <props>
         <prop name="org.wildfly.rule.add-on-depends-on" value="only:ai"/>
-        <prop name="org.wildfly.rule.add-on" value="ai,weaviate"/>
+        <prop name="org.wildfly.rule.add-on" value="ai-embedding-store,weaviate"/>
         <prop name="org.wildfly.rule.add-on-description" value="Use Weaviate as an embedding store"/>
+        <prop name="org.wildfly.rule.expect-add-on-family" value="ai-embedding-model"/>
     </props>
     <dependencies>
         <layer name="ai"/>
