@@ -6,8 +6,7 @@
 <layer-spec xmlns="urn:jboss:galleon:layer-spec:2.0" name="openai">
     <props>
         <prop name="org.wildfly.rule.add-on-depends-on" value="only:ai"/>
-        <prop name="org.wildfly.rule.add-on" value="ai,openai"/>
-        <prop name="org.wildfly.rule.add-on-cardinality" value="1"/>
+        <prop name="org.wildfly.rule.add-on" value="ai-llm,openai"/>
         <prop name="org.wildfly.rule.add-on-description" value="Use OpenAI API for LLM interactions"/>
     </props>
     <dependencies>

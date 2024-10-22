@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+~ Copyright The WildFly Authors
+~ SPDX-License-Identifier: Apache-2.0
+-->
+<layer-spec xmlns="urn:jboss:galleon:layer-spec:2.0" name="embedding-content-retriever">
+    <props>
+        <prop name="org.wildfly.rule.add-on-depends-on" value="all-dependencies"/>
+        <prop name="org.wildfly.rule.add-on" value="ai-content-retriever,embedding-content-retriever"/>
+        <prop name="org.wildfly.rule.add-on-description" value="Use embedding content retriever"/>
+        <prop name="org.wildfly.rule.expect-add-on-families" value="ai-embedding-store,ai-embedding-model"/>
+    </props>
+    <dependencies>
+        <layer name="ai"/>
+    </dependencies>
+    <!-- TODO ADD THE content retriever -->
+</layer-spec>
