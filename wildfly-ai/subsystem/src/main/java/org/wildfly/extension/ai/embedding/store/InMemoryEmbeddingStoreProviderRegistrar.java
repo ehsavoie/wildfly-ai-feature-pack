@@ -4,7 +4,7 @@
  */
 package org.wildfly.extension.ai.embedding.store;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.FILE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.FILESYSTEM_PATH;
 import static org.wildfly.extension.ai.Capabilities.EMBEDDING_STORE_PROVIDER_CAPABILITY;
 
 import java.util.Collection;
@@ -16,7 +16,11 @@ import org.jboss.as.controller.ResourceRegistration;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.descriptions.ParentResourceDescriptionResolver;
+import org.jboss.as.controller.operations.validation.StringLengthValidator;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.as.controller.services.path.PathManager;
+import org.jboss.as.controller.services.path.ResolvePathHandler;
+import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.wildfly.subsystem.resource.ChildResourceDefinitionRegistrar;
 import org.wildfly.subsystem.resource.ManagementResourceRegistrar;
@@ -26,11 +30,21 @@ import org.wildfly.subsystem.resource.operation.ResourceOperationRuntimeHandler;
 
 public class InMemoryEmbeddingStoreProviderRegistrar implements ChildResourceDefinitionRegistrar {
 
-    public static final SimpleAttributeDefinition STORE_FILE = new SimpleAttributeDefinitionBuilder(FILE, ModelType.STRING, false)
-            .setAllowExpression(true)
-            .build();
+    protected static final SimpleAttributeDefinition STORE_PATH
+            = new SimpleAttributeDefinitionBuilder("path", ModelType.STRING, false)
+                    .setXmlName("path")
+                    .setAllowExpression(true)
+                    .setValidator(new StringLengthValidator(1, Integer.MAX_VALUE, false, true))
+                    .addArbitraryDescriptor(FILESYSTEM_PATH, ModelNode.TRUE)
+                    .build();
+    protected static final SimpleAttributeDefinition STORE_RELATIVE_TO
+            = new SimpleAttributeDefinitionBuilder("relative-to", ModelType.STRING, true)
+                    .setXmlName("relative-to")
+                    .setValidator(new StringLengthValidator(1, Integer.MAX_VALUE, true, false))
+                    .setCapabilityReference(PathManager.PATH_SERVICE_DESCRIPTOR.getName())
+                    .build();
 
-    public static final Collection<AttributeDefinition> ATTRIBUTES = List.of(STORE_FILE);
+    public static final Collection<AttributeDefinition> ATTRIBUTES = List.of(STORE_PATH, STORE_RELATIVE_TO);
 
     private final ResourceRegistration registration;
     private final ResourceDescriptor descriptor;
@@ -50,6 +64,13 @@ public class InMemoryEmbeddingStoreProviderRegistrar implements ChildResourceDef
     public ManagementResourceRegistration register(ManagementResourceRegistration parent, ManagementResourceRegistrationContext context) {
         ResourceDefinition definition = ResourceDefinition.builder(this.registration, this.descriptor.getResourceDescriptionResolver()).build();
         ManagementResourceRegistration resourceRegistration = parent.registerSubModel(definition);
+        if (context.getPathManager().isPresent()) {
+            final ResolvePathHandler resolvePathHandler = ResolvePathHandler.Builder.of(context.getPathManager().get())
+                    .setRelativeToAttribute(STORE_RELATIVE_TO)
+                    .setPathAttribute(STORE_PATH)
+                    .build();
+            resourceRegistration.registerOperationHandler(resolvePathHandler.getOperationDefinition(), resolvePathHandler);
+        }
         ManagementResourceRegistrar.of(this.descriptor).register(resourceRegistration);
         return resourceRegistration;
     }

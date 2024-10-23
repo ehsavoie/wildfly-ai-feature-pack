@@ -420,10 +420,18 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="file" type="xs:string" use="required">
+        <xs:attribute name="path" use="required">
             <xs:annotation>
-                <xs:documentation>
-                    The module to load the embedding model from.
+                <xs:documentation>The actual filesystem path. Treated as an absolute path, unless the
+                'relative-to' attribute is specified, in which case the value
+                is treated as relative to that path.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="relative-to" type="xs:string" use="optional">
+           <xs:annotation>
+                <xs:documentation>Reference to a filesystem path defined in the "paths" section
+                of the server configuration.
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
