@@ -2,11 +2,11 @@
  * Copyright The WildFly Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.wildfly.extension.ai.model.embedding;
+package org.wildfly.extension.ai.embedding.model;
 
 import static org.wildfly.extension.ai.Capabilities.EMBEDDING_MODEL_PROVIDER_CAPABILITY;
-import static org.wildfly.extension.ai.model.embedding.EmbeddingModelProviderRegistrar.EMBEDDING_MODEL_CLASS;
-import static org.wildfly.extension.ai.model.embedding.EmbeddingModelProviderRegistrar.EMBEDDING_MODULE;
+import static org.wildfly.extension.ai.embedding.model.InMemoryEmbeddingModelProviderRegistrar.EMBEDDING_MODEL_CLASS;
+import static org.wildfly.extension.ai.embedding.model.InMemoryEmbeddingModelProviderRegistrar.EMBEDDING_MODULE;
 
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import java.util.function.Supplier;
@@ -22,7 +22,7 @@ import org.wildfly.subsystem.service.capability.CapabilityServiceInstaller;
 /**
  * Configures an aggregate EmbeddingModel provider service.
  */
-public class EmbeddingModelProviderServiceConfigurator implements ResourceServiceConfigurator {
+public class InMemoryEmbeddingModelProviderServiceConfigurator implements ResourceServiceConfigurator {
 
     @Override
     public ResourceServiceInstaller configure(OperationContext context, ModelNode model) throws OperationFailedException {

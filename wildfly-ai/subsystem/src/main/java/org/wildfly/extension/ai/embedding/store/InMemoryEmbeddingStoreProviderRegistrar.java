@@ -2,11 +2,10 @@
  * Copyright The WildFly Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.wildfly.extension.ai.model.embedding;
+package org.wildfly.extension.ai.embedding.store;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.MODULE;
-
-import static org.wildfly.extension.ai.Capabilities.EMBEDDING_MODEL_PROVIDER_CAPABILITY;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.FILE;
+import static org.wildfly.extension.ai.Capabilities.EMBEDDING_STORE_PROVIDER_CAPABILITY;
 
 import java.util.Collection;
 import java.util.List;
@@ -25,28 +24,25 @@ import org.wildfly.subsystem.resource.ManagementResourceRegistrationContext;
 import org.wildfly.subsystem.resource.ResourceDescriptor;
 import org.wildfly.subsystem.resource.operation.ResourceOperationRuntimeHandler;
 
-public class EmbeddingModelProviderRegistrar implements ChildResourceDefinitionRegistrar {
+public class InMemoryEmbeddingStoreProviderRegistrar implements ChildResourceDefinitionRegistrar {
 
-    public static final SimpleAttributeDefinition EMBEDDING_MODULE = new SimpleAttributeDefinitionBuilder(MODULE, ModelType.STRING, false)
-            .setAllowExpression(true)
-            .build();
-    public static final SimpleAttributeDefinition EMBEDDING_MODEL_CLASS = new SimpleAttributeDefinitionBuilder("embedding-class", ModelType.STRING, false)
+    public static final SimpleAttributeDefinition STORE_FILE = new SimpleAttributeDefinitionBuilder(FILE, ModelType.STRING, false)
             .setAllowExpression(true)
             .build();
 
-    public static final Collection<AttributeDefinition> ATTRIBUTES = List.of(EMBEDDING_MODULE, EMBEDDING_MODEL_CLASS);
+    public static final Collection<AttributeDefinition> ATTRIBUTES = List.of(STORE_FILE);
 
     private final ResourceRegistration registration;
     private final ResourceDescriptor descriptor;
-    static final String NAME = "embedding-model";
+    static final String NAME = "in-memory-embedding-store";
     public static final PathElement PATH = PathElement.pathElement(NAME);
 
-    public EmbeddingModelProviderRegistrar(ParentResourceDescriptionResolver parentResolver) {
+    public InMemoryEmbeddingStoreProviderRegistrar(ParentResourceDescriptionResolver parentResolver) {
         this.registration = ResourceRegistration.of(PATH);
         this.descriptor = ResourceDescriptor.builder(parentResolver.createChildResolver(PATH))
-                .addCapability(EMBEDDING_MODEL_PROVIDER_CAPABILITY)
+                .addCapability(EMBEDDING_STORE_PROVIDER_CAPABILITY)
                 .addAttributes(ATTRIBUTES)
-                .withRuntimeHandler(ResourceOperationRuntimeHandler.configureService(new EmbeddingModelProviderServiceConfigurator()))
+                .withRuntimeHandler(ResourceOperationRuntimeHandler.configureService(new InMemoryEmbeddingStoreProviderServiceConfigurator()))
                 .build();
     }
 

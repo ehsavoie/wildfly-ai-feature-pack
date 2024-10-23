@@ -2,7 +2,7 @@
  * Copyright The WildFly Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.wildfly.extension.ai.model.chat;
+package org.wildfly.extension.ai.chat;
 
 
 

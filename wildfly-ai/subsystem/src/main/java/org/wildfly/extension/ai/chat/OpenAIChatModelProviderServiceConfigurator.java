@@ -2,7 +2,7 @@
  * Copyright The WildFly Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.wildfly.extension.ai.model.chat;
+package org.wildfly.extension.ai.chat;
 
 import static org.wildfly.extension.ai.AIAttributeDefinitions.API_KEY;
 import static org.wildfly.extension.ai.AIAttributeDefinitions.BASE_URL;
@@ -11,13 +11,13 @@ import static org.wildfly.extension.ai.AIAttributeDefinitions.LOG_REQUESTS;
 import static org.wildfly.extension.ai.AIAttributeDefinitions.LOG_RESPONSES;
 import static org.wildfly.extension.ai.AIAttributeDefinitions.TEMPERATURE;
 import static org.wildfly.extension.ai.Capabilities.CHAT_MODEL_PROVIDER_CAPABILITY;
-import static org.wildfly.extension.ai.model.chat.OpenAIChatLanguageModelProviderRegistrar.FREQUENCY_PENALTY;
-import static org.wildfly.extension.ai.model.chat.OpenAIChatLanguageModelProviderRegistrar.MAX_TOKEN;
-import static org.wildfly.extension.ai.model.chat.OpenAIChatLanguageModelProviderRegistrar.MODEL_NAME;
-import static org.wildfly.extension.ai.model.chat.OpenAIChatLanguageModelProviderRegistrar.ORGANIZATION_ID;
-import static org.wildfly.extension.ai.model.chat.OpenAIChatLanguageModelProviderRegistrar.PRESENCE_PENALTY;
-import static org.wildfly.extension.ai.model.chat.OpenAIChatLanguageModelProviderRegistrar.SEED;
-import static org.wildfly.extension.ai.model.chat.OpenAIChatLanguageModelProviderRegistrar.TOP_P;
+import static org.wildfly.extension.ai.chat.OpenAIChatLanguageModelProviderRegistrar.FREQUENCY_PENALTY;
+import static org.wildfly.extension.ai.chat.OpenAIChatLanguageModelProviderRegistrar.MAX_TOKEN;
+import static org.wildfly.extension.ai.chat.OpenAIChatLanguageModelProviderRegistrar.MODEL_NAME;
+import static org.wildfly.extension.ai.chat.OpenAIChatLanguageModelProviderRegistrar.ORGANIZATION_ID;
+import static org.wildfly.extension.ai.chat.OpenAIChatLanguageModelProviderRegistrar.PRESENCE_PENALTY;
+import static org.wildfly.extension.ai.chat.OpenAIChatLanguageModelProviderRegistrar.SEED;
+import static org.wildfly.extension.ai.chat.OpenAIChatLanguageModelProviderRegistrar.TOP_P;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
@@ -28,7 +28,9 @@ import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.dmr.ModelNode;
 import org.wildfly.extension.ai.AIAttributeDefinitions;
+
 import static org.wildfly.extension.ai.AIAttributeDefinitions.RESPONSE_FORMAT;
+
 import org.wildfly.subsystem.service.ResourceServiceConfigurator;
 import org.wildfly.subsystem.service.ResourceServiceInstaller;
 import org.wildfly.subsystem.service.capability.CapabilityServiceInstaller;
