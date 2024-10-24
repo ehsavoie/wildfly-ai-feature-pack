@@ -6,6 +6,7 @@
 <layer-spec xmlns="urn:jboss:galleon:layer-spec:2.0" name="embedding-content-retriever">
     <props>
         <prop name="org.wildfly.rule.add-on-depends-on" value="all-dependencies"/>
+        <prop name="org.wildfly.rule.class" value="dev.langchain4j.rag.content.retriever.ContentRetriever"/>
         <prop name="org.wildfly.rule.add-on" value="ai-content-retriever,embedding-content-retriever"/>
         <prop name="org.wildfly.rule.add-on-description" value="Use embedding content retriever"/>
         <prop name="org.wildfly.rule.expect-add-on-families" value="ai-embedding-store,ai-embedding-model"/>
