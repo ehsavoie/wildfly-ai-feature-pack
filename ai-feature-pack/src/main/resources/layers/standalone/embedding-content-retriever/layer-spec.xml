@@ -19,8 +19,8 @@
             <param name="embedding-store-content-retriever" value="myretriever"/>
             <param name="embedding-model" value="myembedding"/>
             <param name="embedding-store" value="mystore"/>
-            <param name="max-results" value="2"/>
-            <param name="min-score" value="0.7"/>
+            <param name="max-results" value="${org.wildfly.ai.embedding.retriever.max.results,env.EMBEDDING_RETRIEVER_MAX_RESULTS:2}"/>
+            <param name="min-score" value="${org.wildfly.ai.embedding.retriever.min.score,env.EMBEDDING_RETRIEVER_MIN_SCORE:0.7}"/>
         </feature>
     </feature>
 </layer-spec>

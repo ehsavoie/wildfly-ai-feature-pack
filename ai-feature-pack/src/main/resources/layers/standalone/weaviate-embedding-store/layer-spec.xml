@@ -19,16 +19,16 @@
     <feature spec="subsystem.ai">
         <feature spec="subsystem.ai.weaviate-embedding-store">
             <param name="weaviate-embedding-store" value="mystore" />
-            <param name="socket-binding" value="weaviate"/>
-            <param name="ssl-enabled" value="false"/>
-            <param name="object-class" value="Simple"/>
+            <param name="socket-binding" value="${org.wildfly.ai.weaviate.socket-binding,env.WEAVIATE_SOCKET_BINDING:weaviate}"/>
+            <param name="ssl-enabled" value="${org.wildfly.ai.weaviate.ssl-enabled,env.WEAVIATE_SSL_ENABLED:false}"/>
+            <param name="object-class" value="${org.wildfly.ai.weaviate.object-class,env.WEAVIATE_OBJECT_CLASS:Simple}"/>
             <param name="metadata" value="[url,language,parent_url,file_name,file_path,title,subtitle]"/>
         </feature>
     </feature>
     <feature spec="socket-binding-group.remote-destination-outbound-socket-binding">
         <param name="socket-binding-group" value="standard-sockets" />
-        <param name="remote-destination-outbound-socket-binding" value="weaviate"/>
-        <param name="host" value="localhost"/>
-        <param name="port" value="8090"/>
+        <param name="remote-destination-outbound-socket-binding" value="${org.wildfly.ai.weaviate.socket-binding,env.WEAVIATE_SOCKET_BINDING:weaviate}"/>
+        <param name="host" value="${org.wildfly.ai.weaviate.host,env.WEAVIATE_HOST:localhost}"/>
+        <param name="port" value="${org.wildfly.ai.weaviate.port,env.WEAVIATE_PORT:8090}"/>
     </feature>
 </layer-spec>
