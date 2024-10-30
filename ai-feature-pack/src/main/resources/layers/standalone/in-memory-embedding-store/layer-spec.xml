@@ -14,7 +14,7 @@
     </dependencies>
     <feature spec="subsystem.ai">
         <feature spec="subsystem.ai.in-memory-embedding-store">
-            <param name="in-memory-embedding-store" value="mystore"/>
+            <param name="in-memory-embedding-store" value="in-memory"/>
             <param name="path" value="embeddings.json"/>
             <param name="relative-to" value="jboss.server.config.dir"/>
         </feature>
