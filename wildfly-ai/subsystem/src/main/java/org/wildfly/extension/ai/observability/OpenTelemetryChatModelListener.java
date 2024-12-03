@@ -1,0 +1,129 @@
+/*
+ * Copyright 2024 JBoss by Red Hat.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.wildfly.extension.ai.observability;
+
+import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
+import dev.langchain4j.model.chat.listener.ChatModelListener;
+import dev.langchain4j.model.chat.listener.ChatModelRequest;
+import dev.langchain4j.model.chat.listener.ChatModelRequestContext;
+import dev.langchain4j.model.chat.listener.ChatModelResponse;
+import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
+import dev.langchain4j.model.output.TokenUsage;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+public class OpenTelemetryChatModelListener implements ChatModelListener {
+
+    private static final String OTEL_SCOPE_KEY_NAME = "OTelScope";
+    private static final String OTEL_SPAN_KEY_NAME = "OTelSpan";
+    private AtomicBoolean checkTracer = new AtomicBoolean(true);
+
+    @Inject
+    private Tracer tracer;
+
+    public void setTracer(Tracer tracer) {
+        this.tracer = tracer;
+    }
+
+    private Tracer getTracer() {
+        if(tracer == null && checkTracer.getAndSet(false)) {
+            Instance<Tracer> instance = jakarta.enterprise.inject.spi.CDI.current().select(Tracer.class);
+            if(instance.isResolvable()) {
+                this.tracer = instance.get();
+            }
+        }
+        return tracer;
+    }
+    /*
+     * (non-Javadoc)
+     *
+     * @see dev.langchain4j.model.chat.listener.ChatModelListener#onRequest(dev.langchain4j.model.chat.listener.
+     * ChatModelRequestContext)
+     */
+    @Override
+    public void onRequest(ChatModelRequestContext requestContext) {
+        if(getTracer() == null) {
+            return;
+        }
+        final ChatModelRequest request = requestContext.request();
+        SpanBuilder spanBuilder = tracer.spanBuilder("chat " + request.model())
+                .setAttribute("gen_ai.operation.name", "chat");
+        if (request.maxTokens() != null) {
+            spanBuilder.setAttribute("gen_ai.request.max_tokens", request.maxTokens());
+        }
+
+        if (request.temperature() != null) {
+            spanBuilder.setAttribute("gen_ai.request.temperature", request.temperature());
+        }
+
+        if (request.topP() != null) {
+            spanBuilder.setAttribute("gen_ai.request.top_p", request.topP());
+        }
+
+        Span span = spanBuilder.startSpan();
+        Scope scope = span.makeCurrent();
+
+        requestContext.attributes().put(OTEL_SCOPE_KEY_NAME, scope);
+        requestContext.attributes().put(OTEL_SPAN_KEY_NAME, span);
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see dev.langchain4j.model.chat.listener.ChatModelListener#onResponse(dev.langchain4j.model.chat.listener.
+     * ChatModelResponseContext)
+     */
+    @Override
+    public void onResponse(ChatModelResponseContext responseContext) {
+        Span span = (Span) responseContext.attributes().get(OTEL_SPAN_KEY_NAME);
+        if (span != null) {
+            ChatModelResponse response = responseContext.response();
+            span.setAttribute("gen_ai.response.id", response.id())
+                    .setAttribute("gen_ai.response.model", response.model());
+            if (response.finishReason() != null) {
+                span.setAttribute("gen_ai.response.finish_reasons", response.finishReason().toString());
+            }
+            TokenUsage tokenUsage = response.tokenUsage();
+            if (tokenUsage != null) {
+                span.setAttribute("gen_ai.usage.output_tokens", tokenUsage.outputTokenCount())
+                        .setAttribute("gen_ai.usage.input_tokens", tokenUsage.inputTokenCount());
+            }
+            span.end();
+        }
+        closeScope((Scope) responseContext.attributes().get(OTEL_SCOPE_KEY_NAME));
+    }
+
+
+    @Override
+    public void onError(ChatModelErrorContext errorContext) {
+        Span span = (Span) errorContext.attributes().get(OTEL_SPAN_KEY_NAME);
+        if (span != null) {
+            span.recordException(errorContext.error());
+        }
+        closeScope((Scope) errorContext.attributes().get(OTEL_SCOPE_KEY_NAME));
+    }
+
+    private void closeScope(Scope scope) {
+        if (scope != null) {
+            scope.close();
+        }
+    }
+}

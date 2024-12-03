@@ -6,6 +6,7 @@ package org.wildfly.extension.ai.deployment;
 
 import static org.jboss.as.weld.Capabilities.WELD_CAPABILITY_NAME;
 import static org.wildfly.extension.ai.AILogger.ROOT_LOGGER;
+import static org.wildfly.extension.ai.Capabilities.OPENTELEMETRY_CAPABILITY_NAME;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -36,6 +37,11 @@ public class AIDeploymentProcessor implements DeploymentUnitProcessor {
             final WeldCapability weldCapability = support.getCapabilityRuntimeAPI(WELD_CAPABILITY_NAME, WeldCapability.class);
             if (weldCapability != null && !weldCapability.isPartOfWeldDeployment(deploymentUnit)) {
                 ROOT_LOGGER.cdiRequired();
+            }
+            if (! support.hasCapability(OPENTELEMETRY_CAPABILITY_NAME)) {
+                ROOT_LOGGER.warn("No opentelemtry support available");
+            } else {
+                ROOT_LOGGER.warn("Time to instrument our LLM !!!!!");
             }
             List<ChatLanguageModel> requiredChatModels = deploymentUnit.getAttachmentList(AIAttachements.CHAT_MODELS);
             List<String> chatLanguageModelNames = deploymentUnit.getAttachmentList(AIAttachements.CHAT_MODEL_KEYS);

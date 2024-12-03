@@ -23,7 +23,10 @@ import org.jboss.dmr.ModelNode;
 import org.wildfly.extension.ai.AIAttributeDefinitions;
 
 import static org.wildfly.extension.ai.AIAttributeDefinitions.RESPONSE_FORMAT;
+import static org.wildfly.extension.ai.Capabilities.OPENTELEMETRY_CAPABILITY_NAME;
 
+import java.util.Collections;
+import org.wildfly.extension.ai.observability.OpenTelemetryChatModelListener;
 import org.wildfly.service.capture.ValueRegistry;
 import org.wildfly.subsystem.service.ResourceServiceInstaller;
 
@@ -46,6 +49,7 @@ public class OllamaChatModelProviderServiceConfigurator extends AbstractChatMode
         Integer maxRetries = MAX_RETRIES.resolveModelAttribute(context, model).asIntOrNull();
         String modelName = MODEL_NAME.resolveModelAttribute(context, model).asString();
         boolean isJson = AIAttributeDefinitions.ResponseFormat.isJson(RESPONSE_FORMAT.resolveModelAttribute(context, model).asStringOrNull());
+        boolean isObservable= context.getCapabilityServiceSupport().hasCapability(OPENTELEMETRY_CAPABILITY_NAME);
         Supplier<ChatLanguageModel> factory = new Supplier<>() {
             @Override
             public ChatLanguageModel get() {
@@ -59,6 +63,9 @@ public class OllamaChatModelProviderServiceConfigurator extends AbstractChatMode
                         .modelName(modelName);
                 if (isJson) {
                     builder.format("json");
+                }
+                if(isObservable) {
+                    builder.listeners(Collections.singletonList(new OpenTelemetryChatModelListener()));
                 }
                 return builder.build();
             }
