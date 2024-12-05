@@ -13,6 +13,7 @@ import jakarta.inject.Named;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.jboss.as.controller.capability.CapabilityServiceSupport;
 import org.jboss.as.server.deployment.Attachments;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
@@ -130,5 +131,6 @@ public class AIDependencyProcessor implements DeploymentUnitProcessor {
                 }
             }
         }
+        CapabilityServiceSupport support = deploymentUnit.getAttachment(Attachments.CAPABILITY_SERVICE_SUPPORT);
     }
 }

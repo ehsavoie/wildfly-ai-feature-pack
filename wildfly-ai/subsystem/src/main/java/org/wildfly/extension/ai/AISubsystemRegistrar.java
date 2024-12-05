@@ -37,8 +37,8 @@ class AISubsystemRegistrar implements SubsystemResourceDefinitionRegistrar {
     static final String NAME = "ai";
     static final PathElement PATH = SubsystemResourceDefinitionRegistrar.pathElement(NAME);
     static final ParentResourceDescriptionResolver RESOLVER = new SubsystemResourceDescriptionResolver(NAME, AISubsystemRegistrar.class);
-    private static final int PHASE_DEPENDENCIES_AI = 0x1920;
-    private static final int PHASE_POST_MODULE_AI = 0x3820;
+    private static final int PHASE_DEPENDENCIES_AI = 0x1930;
+    private static final int PHASE_POST_MODULE_AI = 0x3840;
 
     @Override
     public ManagementResourceRegistration register(SubsystemRegistration parent, ManagementResourceRegistrationContext context) {

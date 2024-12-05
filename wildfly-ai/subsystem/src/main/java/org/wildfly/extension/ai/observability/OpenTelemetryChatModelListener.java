@@ -77,6 +77,9 @@ public class OpenTelemetryChatModelListener implements ChatModelListener {
         if (request.topP() != null) {
             spanBuilder.setAttribute("gen_ai.request.top_p", request.topP());
         }
+        if(request.messages() != null && !request.messages().isEmpty()) {
+            spanBuilder.setAttribute("gen_ai.request.messages", request.messages().toString());
+        }
 
         Span span = spanBuilder.startSpan();
         Scope scope = span.makeCurrent();
@@ -106,6 +109,9 @@ public class OpenTelemetryChatModelListener implements ChatModelListener {
                 span.setAttribute("gen_ai.usage.output_tokens", tokenUsage.outputTokenCount())
                         .setAttribute("gen_ai.usage.input_tokens", tokenUsage.inputTokenCount());
             }
+            if (response.aiMessage() != null) {
+                span.setAttribute("gen_ai.response.message", response.aiMessage().toString());
+            }
             span.end();
         }
         closeScope((Scope) responseContext.attributes().get(OTEL_SCOPE_KEY_NAME));
@@ -117,6 +123,7 @@ public class OpenTelemetryChatModelListener implements ChatModelListener {
         Span span = (Span) errorContext.attributes().get(OTEL_SPAN_KEY_NAME);
         if (span != null) {
             span.recordException(errorContext.error());
+            span.end();
         }
         closeScope((Scope) errorContext.attributes().get(OTEL_SCOPE_KEY_NAME));
     }

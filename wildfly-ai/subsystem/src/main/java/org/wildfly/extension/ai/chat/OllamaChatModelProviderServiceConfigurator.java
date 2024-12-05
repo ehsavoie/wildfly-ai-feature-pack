@@ -27,8 +27,10 @@ import static org.wildfly.extension.ai.Capabilities.OPENTELEMETRY_CAPABILITY_NAM
 
 import java.util.Collections;
 import org.wildfly.extension.ai.observability.OpenTelemetryChatModelListener;
+import org.wildfly.extension.opentelemetry.api.WildFlyOpenTelemetryConfig;
 import org.wildfly.service.capture.ValueRegistry;
 import org.wildfly.subsystem.service.ResourceServiceInstaller;
+import org.wildfly.subsystem.service.ServiceDependency;
 
 /**
  * Configures an aggregate ChatModel provider service.
@@ -50,6 +52,12 @@ public class OllamaChatModelProviderServiceConfigurator extends AbstractChatMode
         String modelName = MODEL_NAME.resolveModelAttribute(context, model).asString();
         boolean isJson = AIAttributeDefinitions.ResponseFormat.isJson(RESPONSE_FORMAT.resolveModelAttribute(context, model).asStringOrNull());
         boolean isObservable= context.getCapabilityServiceSupport().hasCapability(OPENTELEMETRY_CAPABILITY_NAME);
+        final ServiceDependency<WildFlyOpenTelemetryConfig> openTelemetryConfig;
+        if(isObservable) {
+            openTelemetryConfig = ServiceDependency.on(WildFlyOpenTelemetryConfig.SERVICE_DESCRIPTOR);
+        } else {
+            openTelemetryConfig = null;
+        }
         Supplier<ChatLanguageModel> factory = new Supplier<>() {
             @Override
             public ChatLanguageModel get() {
@@ -70,6 +78,9 @@ public class OllamaChatModelProviderServiceConfigurator extends AbstractChatMode
                 return builder.build();
             }
         };
+        if(isObservable) {
+            return installService(context.getCurrentAddressValue(), factory, openTelemetryConfig);
+        }
         return installService(context.getCurrentAddressValue(), factory);
     }
 }
