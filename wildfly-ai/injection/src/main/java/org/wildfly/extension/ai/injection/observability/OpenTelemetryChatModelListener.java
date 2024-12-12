@@ -25,23 +25,17 @@ import dev.langchain4j.model.output.TokenUsage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class OpenTelemetryChatModelListener implements ChatModelListener {
 
     private static final String OTEL_SCOPE_KEY_NAME = "OTelScope";
     private static final String OTEL_SPAN_KEY_NAME = "OTelSpan";
-    private AtomicBoolean checkTracer = new AtomicBoolean(true);
-
-    @Inject
+    private final AtomicBoolean checkTracer = new AtomicBoolean(true);
     private Tracer tracer;
-
-    public void setTracer(Tracer tracer) {
-        this.tracer = tracer;
-    }
 
     private Tracer getTracer() {
         if(tracer == null && checkTracer.getAndSet(false)) {
@@ -65,6 +59,7 @@ public class OpenTelemetryChatModelListener implements ChatModelListener {
         }
         final ChatModelRequest request = requestContext.request();
         SpanBuilder spanBuilder = tracer.spanBuilder("chat " + request.model())
+                .setParent(Context.current())
                 .setAttribute("gen_ai.operation.name", "chat");
         if (request.maxTokens() != null) {
             spanBuilder.setAttribute("gen_ai.request.max_tokens", request.maxTokens());
@@ -83,6 +78,7 @@ public class OpenTelemetryChatModelListener implements ChatModelListener {
 
         Span span = spanBuilder.startSpan();
         Scope scope = span.makeCurrent();
+        System.out.println("OpenTelemetryChatModelListener.onRequest with context " + span.getSpanContext() + " and tracer " + tracer + " in thread " + Thread.currentThread() + " with scope " + scope);
 
         requestContext.attributes().put(OTEL_SCOPE_KEY_NAME, scope);
         requestContext.attributes().put(OTEL_SPAN_KEY_NAME, span);
@@ -114,7 +110,9 @@ public class OpenTelemetryChatModelListener implements ChatModelListener {
             }
             span.end();
         }
-        closeScope((Scope) responseContext.attributes().get(OTEL_SCOPE_KEY_NAME));
+        Scope scope = (Scope) responseContext.attributes().get(OTEL_SCOPE_KEY_NAME);
+        System.out.println("OpenTelemetryChatModelListener.onResponse with context " + span.getSpanContext() + " and tracer " + tracer + " in thread " + Thread.currentThread() + " with scope " + scope);
+        closeScope(scope);
     }
 
 
@@ -130,6 +128,7 @@ public class OpenTelemetryChatModelListener implements ChatModelListener {
 
     private void closeScope(Scope scope) {
         if (scope != null) {
+            System.out.println("OpenTelemetryChatModelListener.closeScope tracer " + tracer + " in thread " + Thread.currentThread() + " with scope " + scope);
             scope.close();
         }
     }
