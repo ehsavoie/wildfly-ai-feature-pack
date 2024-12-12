@@ -29,7 +29,7 @@ import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.dmr.ModelNode;
 import org.wildfly.extension.ai.AIAttributeDefinitions;
-import org.wildfly.extension.ai.observability.OpenTelemetryChatModelListener;
+import org.wildfly.extension.ai.injection.observability.OpenTelemetryChatModelListener;
 import org.wildfly.service.capture.ValueRegistry;
 import org.wildfly.subsystem.service.ResourceServiceInstaller;
 

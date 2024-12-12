@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wildfly.extension.ai.observability;
+package org.wildfly.extension.ai.injection.observability;
 
 import dev.langchain4j.model.chat.listener.ChatModelErrorContext;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
@@ -28,6 +28,7 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class OpenTelemetryChatModelListener implements ChatModelListener {
@@ -35,9 +36,11 @@ public class OpenTelemetryChatModelListener implements ChatModelListener {
     private static final String OTEL_SCOPE_KEY_NAME = "OTelScope";
     private static final String OTEL_SPAN_KEY_NAME = "OTelSpan";
     private final AtomicBoolean checkTracer = new AtomicBoolean(true);
+    @Inject
     private Tracer tracer;
 
     private Tracer getTracer() {
+        System.out.println("Tracer: "+ tracer);
         if(tracer == null && checkTracer.getAndSet(false)) {
             Instance<Tracer> instance = jakarta.enterprise.inject.spi.CDI.current().select(Tracer.class);
             if(instance.isResolvable()) {

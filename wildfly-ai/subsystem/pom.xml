@@ -224,23 +224,8 @@
             <artifactId>converter-jackson</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.opentelemetry</groupId>
-            <artifactId>opentelemetry-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.opentelemetry</groupId>
-            <artifactId>opentelemetry-context</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.wildfly</groupId>
             <artifactId>wildfly-opentelemetry-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.smallrye.opentelemetry</groupId>
-            <artifactId>smallrye-opentelemetry-api</artifactId>
             <scope>provided</scope>
         </dependency>
     </dependencies>

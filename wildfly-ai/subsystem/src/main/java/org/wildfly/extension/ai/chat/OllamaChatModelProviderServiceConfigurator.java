@@ -26,7 +26,7 @@ import static org.wildfly.extension.ai.AIAttributeDefinitions.RESPONSE_FORMAT;
 import static org.wildfly.extension.ai.Capabilities.OPENTELEMETRY_CAPABILITY_NAME;
 
 import java.util.Collections;
-import org.wildfly.extension.ai.observability.OpenTelemetryChatModelListener;
+import org.wildfly.extension.ai.injection.observability.OpenTelemetryChatModelListener;
 import org.wildfly.extension.opentelemetry.api.WildFlyOpenTelemetryConfig;
 import org.wildfly.service.capture.ValueRegistry;
 import org.wildfly.subsystem.service.ResourceServiceInstaller;
