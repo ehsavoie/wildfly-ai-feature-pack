@@ -41,42 +41,8 @@ public class WasmProviderRegistrar implements ChildResourceDefinitionRegistrar {
                     .setValidator(new StringLengthValidator(1, Integer.MAX_VALUE, true, false))
                     .setCapabilityReference(PathManager.PATH_SERVICE_DESCRIPTOR.getName())
                     .build();
-//    protected static final SimpleAttributeDefinition METHOD_NAME
-//            = new SimpleAttributeDefinitionBuilder("method", ModelType.STRING, false)
-//                    .setAllowExpression(false)
-//                    .build();
-//    protected static final SimpleAttributeDefinition TOOL_DESCRIPTION
-//            = new SimpleAttributeDefinitionBuilder(DESCRIPTION, ModelType.STRING, false)
-//                    .setAllowExpression(false)
-//                    .build();
-//    protected static final SimpleAttributeDefinition TOOL_RETURN_TYPE = create(TYPE, ModelType.STRING, false)
-//                    .setAllowExpression(false)
-//                    .build();
-//    private static final ObjectTypeAttributeDefinition TOOL_ARG = ObjectTypeAttributeDefinition.Builder.of("tool-arg",
-//            create(DESCRIPTION, ModelType.STRING, false)
-//                    .setAllowExpression(false)
-//                    .build(),
-//            create(NAME, ModelType.STRING, false)
-//                    .setAllowExpression(false)
-//                    .build(),
-//            create(REQUIRED, ModelType.BOOLEAN, true)
-//                    .setDefaultValue(ModelNode.FALSE)
-//                    .setAllowExpression(false)
-//                    .build(),
-//            create(TYPE, ModelType.STRING, false)
-//                    .setAllowExpression(false)
-//                    .build())
-//            .build();
-//
-//    public static final ObjectListAttributeDefinition TOOL_ARGUMENTS = ObjectListAttributeDefinition.Builder.of("tool-args", TOOL_ARG)
-//            .setRequired(false)
-//            .setAllowExpression(false)
-//            .setMinSize(1)
-//            .setMaxSize(Integer.MAX_VALUE)
-//            .build();
 
     public static final Collection<AttributeDefinition> ATTRIBUTES = List.of(
-//            TOOL_ARGUMENTS, TOOL_DESCRIPTION, METHOD_NAME, 
             WASM_PATH, WASM_RELATIVE_TO);
 
     static final String WASM_TOOL = "wasm-tool";
@@ -90,7 +56,7 @@ public class WasmProviderRegistrar implements ChildResourceDefinitionRegistrar {
         this.descriptor = ResourceDescriptor.builder(parentResolver.createChildResolver(PATH))
                 .addCapability(Capabilities.WASM_TOOL_PROVIDER_CAPABILITY)
                 .addAttributes(ATTRIBUTES)
-                .withRuntimeHandler(ResourceOperationRuntimeHandler.configureService(new WasmToolProviderServiceConfigurator()))
+                .withRuntimeHandler(ResourceOperationRuntimeHandler.configureService(new WasmProviderServiceConfigurator()))
                 .build();
     }
 

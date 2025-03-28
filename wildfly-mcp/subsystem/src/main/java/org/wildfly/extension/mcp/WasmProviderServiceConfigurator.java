@@ -28,19 +28,21 @@ public class WasmProviderServiceConfigurator implements ResourceServiceConfigura
     public ResourceServiceInstaller configure(OperationContext context, ModelNode model) throws OperationFailedException {
         final String path = WASM_PATH.resolveModelAttribute(context, model).asString();
         final String relativeTo = WASM_RELATIVE_TO.resolveModelAttribute(context, model).asStringOrNull();
+        final String name = context.getCurrentAddressValue();
         ServiceDependency<PathManager> pathManager = ServiceDependency.on(PathManager.SERVICE_DESCRIPTOR);
         Supplier<WasmToolConfiguration> factory = new Supplier<>() {
             @Override
             public WasmToolConfiguration get() {
                 try {
                     String wasmFile = new File(pathManager.get().resolveRelativePathEntry(path, relativeTo)).toURI().toURL().toString();
-                    return new WasmToolConfiguration(wasmFile, Collections.emptyMap());
+                    return new WasmToolConfiguration(name, wasmFile, Collections.emptyMap());
                 } catch (MalformedURLException ex) {
                     throw new RuntimeException(ex);
                 }
             }
         };
         return CapabilityServiceInstaller.builder(WASM_TOOL_PROVIDER_CAPABILITY, factory)
+                .requires(pathManager)
                 .asActive()
                 .build();
     }

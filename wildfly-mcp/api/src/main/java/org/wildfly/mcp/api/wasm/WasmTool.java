@@ -12,7 +12,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Annotates a filed/parameter method of a CDI bean as an WASM Resource tool.
+ * Annotates a field/parameter method of a CDI bean as an WASM Resource tool.
  */
 @Retention(RUNTIME)
 @Target(value={FIELD, PARAMETER})

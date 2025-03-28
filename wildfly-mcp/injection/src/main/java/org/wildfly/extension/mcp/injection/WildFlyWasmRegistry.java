@@ -13,8 +13,8 @@ public class WildFlyWasmRegistry {
 
     private final Map<String, WasmToolConfiguration> wasmTools = new HashMap<>();
 
-    public void registerWasmTool(String name, WasmToolConfiguration wasmToolConfiguration) {
-        wasmTools.put(name, wasmToolConfiguration);
+    public void registerWasmTool(WasmToolConfiguration wasmToolConfiguration) {
+        wasmTools.put(wasmToolConfiguration.name(), wasmToolConfiguration);
     }
 
     public Map<String, WasmToolConfiguration> listWasmTools() {

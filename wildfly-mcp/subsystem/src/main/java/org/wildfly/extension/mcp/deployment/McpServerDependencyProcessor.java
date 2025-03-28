@@ -19,6 +19,7 @@ import org.jboss.as.server.deployment.annotation.CompositeIndex;
 import org.jboss.as.server.deployment.module.ModuleDependency;
 import org.jboss.as.server.deployment.module.ModuleSpecification;
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget.Kind;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.JandexReflection;
 import org.jboss.jandex.MethodInfo;
@@ -178,7 +179,16 @@ public class McpServerDependencyProcessor implements DeploymentUnitProcessor {
         }
         DeploymentUnit deploymentUnit = deploymentPhaseContext.getDeploymentUnit();
         for (AnnotationInstance annotation : annotations) {
-            String name = annotation.value("name") != null ? annotation.value("name").asString() : annotation.target().asType().toString();
+            String name;
+            if(annotation.value("name") != null) {
+                name = annotation.value("name").asString();
+            }else {
+                if(annotation.target().kind() == Kind.FIELD) {
+                   name = annotation.target().asField().name();
+                } else {
+                    name = annotation.target().asMethodParameter().name();
+                }
+            }
             deploymentUnit.addToAttachmentList(MCPAttachements.WASM_TOOL_NAMES, name);
             deploymentPhaseContext.addDeploymentDependency(WASM_TOOL_PROVIDER_CAPABILITY.getCapabilityServiceName(name), MCPAttachements.WASM_TOOL_CONFIGURATIONS);
         }

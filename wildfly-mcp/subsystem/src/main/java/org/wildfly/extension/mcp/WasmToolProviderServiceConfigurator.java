@@ -40,6 +40,7 @@ public class WasmToolProviderServiceConfigurator implements ResourceServiceConfi
 
     @Override
     public ResourceServiceInstaller configure(OperationContext context, ModelNode model) throws OperationFailedException {
+        final String name = context.getCurrentAddressValue();
         final String path = WASM_PATH.resolveModelAttribute(context, model).asString();
         final String relativeTo = WASM_RELATIVE_TO.resolveModelAttribute(context, model).asStringOrNull();
         String methodName = METHOD_NAME.resolveModelAttribute(context, model).asStringOrNull();
@@ -68,7 +69,7 @@ public class WasmToolProviderServiceConfigurator implements ResourceServiceConfi
             public WasmToolConfiguration get() {
                 try {
                     String wasmFile = new File(pathManager.get().resolveRelativePathEntry(path, relativeTo)).toURI().toURL().toString();
-                    return new WasmToolConfiguration(wasmFile, Collections.emptyMap());
+                    return new WasmToolConfiguration(name, wasmFile, Collections.emptyMap());
                 } catch (MalformedURLException ex) {
                     throw new RuntimeException(ex);
                 }
