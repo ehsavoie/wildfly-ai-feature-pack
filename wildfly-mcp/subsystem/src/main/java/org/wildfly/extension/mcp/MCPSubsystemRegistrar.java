@@ -46,6 +46,7 @@ class MCPSubsystemRegistrar implements SubsystemResourceDefinitionRegistrar {
                 .build();
         ManagementResourceRegistrar.of(descriptor).register(registration);
         new McpEndpointConfigurationProviderRegistrar(RESOLVER).register(registration, context);
+        new WasmToolProviderRegistrar(RESOLVER).register(registration, context);
         return registration;
     }
 }
