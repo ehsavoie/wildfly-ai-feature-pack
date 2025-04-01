@@ -5,7 +5,6 @@
 package org.wildfly.mcp.api.wasm;
 
 import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Retention;
@@ -15,7 +14,7 @@ import java.lang.annotation.Target;
  * Annotates a field/parameter method of a CDI bean as an WASM Resource tool.
  */
 @Retention(RUNTIME)
-@Target(value={FIELD, PARAMETER})
+@Target(value={FIELD})
 public @interface WasmTool {
 
     /**

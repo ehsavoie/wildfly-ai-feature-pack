@@ -4,6 +4,7 @@
  */
 package org.wildfly.extension.mcp.injection.wasm;
 
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.literal.NamedLiteral;

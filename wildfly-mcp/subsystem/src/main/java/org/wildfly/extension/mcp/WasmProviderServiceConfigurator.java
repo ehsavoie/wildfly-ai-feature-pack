@@ -5,11 +5,11 @@
 package org.wildfly.extension.mcp;
 
 import static org.wildfly.extension.mcp.Capabilities.WASM_TOOL_PROVIDER_CAPABILITY;
-import static org.wildfly.extension.mcp.WasmToolProviderRegistrar.WASM_PATH;
-import static org.wildfly.extension.mcp.WasmToolProviderRegistrar.WASM_RELATIVE_TO;
+import static org.wildfly.extension.mcp.WasmProviderRegistrar.WASM_PATH;
+import static org.wildfly.extension.mcp.WasmProviderRegistrar.WASM_RELATIVE_TO;
 
 import java.io.File;
-import java.net.MalformedURLException;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.function.Supplier;
 import org.jboss.as.controller.OperationContext;
@@ -33,12 +33,8 @@ public class WasmProviderServiceConfigurator implements ResourceServiceConfigura
         Supplier<WasmToolConfiguration> factory = new Supplier<>() {
             @Override
             public WasmToolConfiguration get() {
-                try {
-                    String wasmFile = new File(pathManager.get().resolveRelativePathEntry(path, relativeTo)).toURI().toURL().toString();
-                    return new WasmToolConfiguration(name, wasmFile, Collections.emptyMap());
-                } catch (MalformedURLException ex) {
-                    throw new RuntimeException(ex);
-                }
+                Path wasmFile = new File(pathManager.get().resolveRelativePathEntry(path, relativeTo)).toPath();
+                return new WasmToolConfiguration(name, wasmFile, Collections.emptyMap());
             }
         };
         return CapabilityServiceInstaller.builder(WASM_TOOL_PROVIDER_CAPABILITY, factory)

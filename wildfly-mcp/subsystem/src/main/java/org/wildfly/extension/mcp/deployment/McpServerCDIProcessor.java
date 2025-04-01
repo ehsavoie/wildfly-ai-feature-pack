@@ -19,6 +19,7 @@ import org.wildfly.extension.mcp.injection.WildFlyMCPRegistry;
 import org.wildfly.extension.mcp.injection.WildFlyWasmRegistry;
 import org.wildfly.extension.mcp.injection.tool.McpPortableExtension;
 import org.wildfly.extension.mcp.injection.wasm.WasmPortableExtension;
+import org.wildfly.mcp.api.wasm.WasmServicePortableExtension;
 
 public class McpServerCDIProcessor implements DeploymentUnitProcessor {
 
@@ -37,6 +38,7 @@ public class McpServerCDIProcessor implements DeploymentUnitProcessor {
         } else {
             weldCapability.get().registerExtensionInstance(new McpPortableExtension(registry, classLoader), deploymentUnit);
             weldCapability.get().registerExtensionInstance(new WasmPortableExtension(wasmRegistry, classLoader), deploymentUnit);
+            weldCapability.get().registerExtensionInstance(new WasmServicePortableExtension(classLoader), deploymentUnit);
         }
     }
 }
