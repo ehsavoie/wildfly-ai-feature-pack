@@ -37,7 +37,7 @@ public class McpServerCDIProcessor implements DeploymentUnitProcessor {
             ROOT_LOGGER.cdiRequired();
         } else {
             weldCapability.get().registerExtensionInstance(new McpPortableExtension(registry, classLoader), deploymentUnit);
-            weldCapability.get().registerExtensionInstance(new WasmPortableExtension(wasmRegistry, classLoader), deploymentUnit);
+            weldCapability.get().registerExtensionInstance(new WasmPortableExtension(wasmRegistry), deploymentUnit);
             weldCapability.get().registerExtensionInstance(new WasmServicePortableExtension(classLoader), deploymentUnit);
         }
     }

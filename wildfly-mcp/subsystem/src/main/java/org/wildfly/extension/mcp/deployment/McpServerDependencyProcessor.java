@@ -32,11 +32,12 @@ import org.wildfly.extension.mcp.injection.WildFlyMCPRegistry;
 import org.wildfly.extension.mcp.injection.tool.ArgumentMetadata;
 import org.wildfly.extension.mcp.injection.tool.McpFeatureMetadata;
 import org.wildfly.extension.mcp.injection.tool.MethodMetadata;
+import org.wildfly.mcp.api.wasm.WasmTool;
 import org.wildfly.mcp.api.Prompt;
 import org.wildfly.mcp.api.PromptArg;
 import org.wildfly.mcp.api.Resource;
 import org.wildfly.mcp.api.ResourceArg;
-import org.wildfly.mcp.api.wasm.WasmTool;
+import org.wildfly.mcp.api.wasm.WasmToolService;
 
 public class McpServerDependencyProcessor implements DeploymentUnitProcessor {
 
@@ -62,6 +63,8 @@ public class McpServerDependencyProcessor implements DeploymentUnitProcessor {
         processResources(registry, annotations);
         annotations = index.getAnnotations(DotName.createSimple(WasmTool.class));
         processWasmTools(deploymentPhaseContext, annotations);
+        annotations = index.getAnnotations(DotName.createSimple(WasmToolService.class));
+        processWasmToolServices(deploymentPhaseContext, annotations);
         deploymentUnit.putAttachment(MCP_REGISTRY_METADATA, registry);
         deploymentPhaseContext.addDeploymentDependency(Capabilities.MCP_SERVER_PROVIDER_CAPABILITY.getCapabilityServiceName(), MCPAttachements.MCP_ENDPOINT_CONFIGURATION);
     }
@@ -191,6 +194,20 @@ public class McpServerDependencyProcessor implements DeploymentUnitProcessor {
             }
             deploymentUnit.addToAttachmentList(MCPAttachements.WASM_TOOL_NAMES, name);
             deploymentPhaseContext.addDeploymentDependency(WASM_TOOL_PROVIDER_CAPABILITY.getCapabilityServiceName(name), MCPAttachements.WASM_TOOL_CONFIGURATIONS);
+        }
+    }
+    private void processWasmToolServices(DeploymentPhaseContext deploymentPhaseContext, List<AnnotationInstance> annotations) {
+        if (annotations == null || annotations.isEmpty()) {
+            return;
+        }
+        DeploymentUnit deploymentUnit = deploymentPhaseContext.getDeploymentUnit();
+        for (AnnotationInstance annotation : annotations) {
+            String name;
+            if (annotation.value("wasmToolConfigurationName") != null) {
+                name = annotation.value("wasmToolConfigurationName").asString();
+                deploymentUnit.addToAttachmentList(MCPAttachements.WASM_TOOL_NAMES, name);
+                deploymentPhaseContext.addDeploymentDependency(WASM_TOOL_PROVIDER_CAPABILITY.getCapabilityServiceName(name), MCPAttachements.WASM_TOOL_CONFIGURATIONS);
+            }
         }
     }
 }

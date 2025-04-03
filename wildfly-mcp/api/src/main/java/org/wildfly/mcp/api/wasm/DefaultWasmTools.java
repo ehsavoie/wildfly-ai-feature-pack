@@ -25,8 +25,11 @@ public class DefaultWasmTools<T> extends WasmTools<T> {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 byte[] input;
+                if(args == null && "toString".equals(method.getName())) {
+                    return null;
+                }
                 if (args[0] instanceof String) {
-                    input = args[0].toString().getBytes(StandardCharsets.UTF_8);
+                    input = ((String)args[0]).getBytes(StandardCharsets.UTF_8);
                 } else if (args[0] instanceof byte[]) {
                     input = (byte[]) args[0];
                 } else {

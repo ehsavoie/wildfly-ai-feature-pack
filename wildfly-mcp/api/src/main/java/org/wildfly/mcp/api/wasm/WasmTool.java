@@ -4,28 +4,44 @@
  */
 package org.wildfly.mcp.api.wasm;
 
-import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import jakarta.enterprise.util.AnnotationLiteral;
+import jakarta.inject.Qualifier;
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-/**
- * Annotates a field/parameter method of a CDI bean as an WASM Resource tool.
- */
+@Qualifier
 @Retention(RUNTIME)
-@Target(value={FIELD})
+@Target(ElementType.FIELD)
 public @interface WasmTool {
 
-    /**
-     * Constant value for {@link #name()} indicating that the annotated element's name should be used as-is.
-     */
-    String ELEMENT_NAME = "<<element name>>";
+    public String value() default "";
 
-    /**
-     * Each tool must have a unique name. By default, the name is derived from the name of the annotated field/parameter.
-     */
-    String name() default ELEMENT_NAME;
+    public final class WasmToolLiteral extends AnnotationLiteral<WasmTool> implements WasmTool {
 
+        private final String value;
 
+        /**
+         * Default Singleton literal
+         *
+         * @param value
+         * @return
+         */
+        public static WasmToolLiteral of(String value) {
+            return new WasmToolLiteral(value);
+        }
+
+        @Override
+        public String value() {
+            return value;
+        }
+
+        private WasmToolLiteral(String value) {
+            this.value = value;
+        }
+        private static final long serialVersionUID = 1L;
+
+    }
 }
