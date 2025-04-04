@@ -22,10 +22,6 @@ public class WasmServicePortableExtension implements Extension {
     public WasmServicePortableExtension() {
     }
 
-    public static Set<Class<?>> getDetectedAIServicesDeclaredInterfaces() {
-        return detectedWasmServicesDeclaredInterfaces;
-    }
-
     <T> void processAnnotatedType(@Observes @WithAnnotations({WasmToolService.class}) ProcessAnnotatedType<T> pat) {
         if (pat.getAnnotatedType().getJavaClass().isInterface()) {
             detectedWasmServicesDeclaredInterfaces.add(pat.getAnnotatedType().getJavaClass());
