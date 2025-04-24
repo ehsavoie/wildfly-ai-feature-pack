@@ -47,7 +47,7 @@ enum AISubsystemSchema implements PersistentSubsystemSchema<AISubsystemSchema> {
     @Override
     public PersistentResourceXMLDescription getXMLDescription() {
         PersistentResourceXMLDescription.Factory factory = PersistentResourceXMLDescription.factory(this);
-        return factory.builder(AISubsystemRegistrar.PATH)
+        return factory.builder(AISubsystemRegistrar.REGISTRATION.getPathElement())
                 .addChild(PersistentResourceXMLDescription.decorator("chat-language-models")
                         .addChild(factory.builder(GithubModelChatLanguageModelProviderRegistrar.PATH).addAttributes(GithubModelChatLanguageModelProviderRegistrar.ATTRIBUTES.stream()).build())
                         .addChild(factory.builder(OllamaChatLanguageModelProviderRegistrar.PATH).addAttributes(OllamaChatLanguageModelProviderRegistrar.ATTRIBUTES.stream()).build())
