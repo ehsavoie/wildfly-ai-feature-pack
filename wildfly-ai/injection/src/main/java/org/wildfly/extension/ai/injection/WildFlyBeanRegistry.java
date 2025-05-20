@@ -6,6 +6,7 @@ package org.wildfly.extension.ai.injection;
 
 import static org.wildfly.extension.ai.injection.WildFlyLLMConfig.registerBean;
 
+import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -28,6 +29,7 @@ public class WildFlyBeanRegistry {
     private static final Map<String, EmbeddingStore> embeddingStores = new HashMap<>();
     private static final Map<String, WildFlyContentRetrieverConfig> contentRetrievers = new HashMap<>();
     private static final Map<String, ToolProvider> toolProviders = new HashMap<>();
+     private static final Map<String, ChatMemoryProvider> chatMemoryProviders = new HashMap<>();
 
     public static final void registerChatModel(String id, WildFlyChatModelConfig chatModel) {
         if (!chatModels.containsKey(id)) {
@@ -60,9 +62,15 @@ public class WildFlyBeanRegistry {
             registerBean(id, contentRetriever, ContentRetriever.class);
         }
     }
+
     public static void registerToolProvider(String id, ToolProvider toolProvider) {
         toolProviders.put(id, toolProvider);
         registerBean(id, toolProvider, ToolProvider.class);
+    }
+
+    public static void registerChatMemoryProvider(String id, ChatMemoryProvider chatMemoryProvider) {
+        chatMemoryProviders.put(id, chatMemoryProvider);
+        registerBean(id, chatMemoryProvider, ChatMemoryProvider.class);
     }
 
     public static final List<Extension> getCDIExtensions() {

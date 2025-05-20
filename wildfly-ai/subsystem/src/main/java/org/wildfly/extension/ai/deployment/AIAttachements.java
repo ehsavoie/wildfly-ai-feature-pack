@@ -4,6 +4,7 @@
  */
 package org.wildfly.extension.ai.deployment;
 
+import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.store.embedding.EmbeddingStore;
@@ -24,4 +25,6 @@ public class AIAttachements {
     static final AttachmentKey<AttachmentList<String>> CONTENT_RETRIEVER_KEYS = AttachmentKey.createList(String.class);
     static final AttachmentKey<AttachmentList<ToolProvider>> TOOL_PROVIDERS = AttachmentKey.createList(ToolProvider.class);
     static final AttachmentKey<AttachmentList<String>> TOOL_PROVIDER_KEYS = AttachmentKey.createList(String.class);
+    static final AttachmentKey<AttachmentList<ChatMemoryProvider>> CHAT_MEMORY_PROVIDERS = AttachmentKey.createList(ChatMemoryProvider.class);
+    static final AttachmentKey<AttachmentList<String>> CHAT_MEMORY_PROVIDER_KEYS = AttachmentKey.createList(String.class);
 }
