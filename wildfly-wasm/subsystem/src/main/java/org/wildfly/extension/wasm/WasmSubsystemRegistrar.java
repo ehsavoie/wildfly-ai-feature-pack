@@ -4,7 +4,11 @@
  */
 package org.wildfly.extension.wasm;
 
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEPLOYMENT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
+import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.ResourceDefinition;
+import org.jboss.as.controller.SimpleResourceDefinition;
 import org.jboss.as.controller.SubsystemRegistration;
 import org.jboss.as.controller.SubsystemResourceRegistration;
 import org.jboss.as.controller.descriptions.ParentResourceDescriptionResolver;
@@ -23,7 +27,7 @@ import org.wildfly.subsystem.resource.SubsystemResourceDefinitionRegistrar;
  */
 class WasmSubsystemRegistrar implements SubsystemResourceDefinitionRegistrar {
 
-    static final String NAME = "wasm";
+    public static final String NAME = "wasm";
     static final SubsystemResourceRegistration REGISTRATION = SubsystemResourceRegistration.of(NAME);
     static final ParentResourceDescriptionResolver RESOLVER = new SubsystemResourceDescriptionResolver(NAME, WasmSubsystemRegistrar.class);
     private static final int PHASE_DEPENDENCIES_WASM = 0x1950;
@@ -42,6 +46,10 @@ class WasmSubsystemRegistrar implements SubsystemResourceDefinitionRegistrar {
                 .build();
         ManagementResourceRegistrar.of(descriptor).register(registration);
         new WasmProviderRegistrar(RESOLVER).register(registration, context);
+        ResourceDefinition deploymentsDef = new SimpleResourceDefinition(new SimpleResourceDefinition.Parameters(PathElement.pathElement(SUBSYSTEM, NAME),
+                    RESOLVER.createChildResolver(DEPLOYMENT)).setFeature(false).setRuntime());
+        final ManagementResourceRegistration deployment = parent.registerDeploymentModel(deploymentsDef);
+        new WasmDeploymentRegistrar(RESOLVER).register(deployment, context);
         return registration;
     }
 }
