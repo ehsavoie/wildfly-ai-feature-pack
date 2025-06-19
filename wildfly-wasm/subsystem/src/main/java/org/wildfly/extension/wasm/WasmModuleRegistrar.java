@@ -15,8 +15,10 @@
  */
 package org.wildfly.extension.wasm;
 
+import static org.jboss.as.controller.PathElement.pathElement;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEPLOYMENT;
 import org.jboss.as.controller.PathElement;
+import org.jboss.as.controller.ResourceDefinition;
 import org.jboss.as.controller.ResourceRegistration;
 import org.jboss.as.controller.descriptions.ParentResourceDescriptionResolver;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
@@ -33,13 +35,15 @@ public class WasmModuleRegistrar implements ChildResourceDefinitionRegistrar {
     private final ResourceDescriptor descriptor;
 
     public WasmModuleRegistrar(ParentResourceDescriptionResolver parentResolver) {
-        this.descriptor = ResourceDescriptor.builder(parentResolver.createChildResolver(DEPLOYMENT).createChildResolver(PATH))
+        this.descriptor = ResourceDescriptor.builder(parentResolver.createChildResolver(pathElement(DEPLOYMENT)).createChildResolver(PATH))
                 .build();
     }
 
     @Override
     public ManagementResourceRegistration register(ManagementResourceRegistration parent, ManagementResourceRegistrationContext context) {
-        ManagementResourceRegistrar.of(this.descriptor).register(parent);
+        ResourceDefinition definition = ResourceDefinition.builder(REGISTRATION, this.descriptor.getResourceDescriptionResolver()).build();
+        ManagementResourceRegistration registration = parent.registerSubModel(definition);
+        ManagementResourceRegistrar.of(this.descriptor).register(registration);
         return parent;
     }
 
