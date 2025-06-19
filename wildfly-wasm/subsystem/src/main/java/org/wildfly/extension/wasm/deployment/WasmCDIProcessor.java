@@ -18,7 +18,7 @@ import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.as.weld.WeldCapability;
-import org.wildfly.extension.wasm.WasmDeploymentRegistrar;
+import org.wildfly.extension.wasm.WasmModuleRegistrar;
 import org.wildfly.extension.wasm.WasmLogger;
 import org.wildfly.extension.wasm.injection.WasmPortableExtension;
 import org.wildfly.extension.wasm.injection.WasmServicePortableExtension;
@@ -53,10 +53,9 @@ public class WasmCDIProcessor implements DeploymentUnitProcessor {
             final DeploymentResourceSupport deploymentResourceSupport = deploymentUnit
                     .getAttachment(org.jboss.as.server.deployment.Attachments.DEPLOYMENT_RESOURCE_SUPPORT);
             
-                     deploymentUnit.getAttachmentList(WasmAttachements.WASM_TOOL_CONFIGURATIONS).forEach(
-                             c -> {
+                     deploymentUnit.getAttachmentList(WasmAttachements.WASM_TOOL_CONFIGURATIONS).forEach(c -> {
                                  WasmLogger.ROOT_LOGGER.warn("************************** Registering " + c);
-                                 deploymentResourceSupport.getDeploymentSubModel("wasm", PathElement.pathElement(WasmDeploymentRegistrar.NAME, c.name()));
+                                 deploymentResourceSupport.getDeploymentSubModel("wasm", PathElement.pathElement(WasmModuleRegistrar.NAME, c.name()));
                                      });
         } catch (Exception e) {
             e.printStackTrace();

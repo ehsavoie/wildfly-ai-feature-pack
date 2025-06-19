@@ -25,14 +25,14 @@ import org.wildfly.subsystem.resource.ManagementResourceRegistrar;
 import org.wildfly.subsystem.resource.ManagementResourceRegistrationContext;
 import org.wildfly.subsystem.resource.ResourceDescriptor;
 
-public class WasmDeploymentRegistrar implements ChildResourceDefinitionRegistrar {
+public class WasmModuleRegistrar implements ChildResourceDefinitionRegistrar {
 
     public static final String NAME = "module";
     public static final PathElement PATH = PathElement.pathElement(NAME);
     public static final ResourceRegistration REGISTRATION = ResourceRegistration.of(PATH);
     private final ResourceDescriptor descriptor;
 
-    public WasmDeploymentRegistrar(ParentResourceDescriptionResolver parentResolver) {
+    public WasmModuleRegistrar(ParentResourceDescriptionResolver parentResolver) {
         this.descriptor = ResourceDescriptor.builder(parentResolver.createChildResolver(DEPLOYMENT).createChildResolver(PATH))
                 .build();
     }

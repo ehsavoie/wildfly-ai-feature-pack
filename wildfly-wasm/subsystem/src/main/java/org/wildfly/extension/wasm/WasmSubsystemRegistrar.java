@@ -4,11 +4,7 @@
  */
 package org.wildfly.extension.wasm;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEPLOYMENT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
-import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.ResourceDefinition;
-import org.jboss.as.controller.SimpleResourceDefinition;
 import org.jboss.as.controller.SubsystemRegistration;
 import org.jboss.as.controller.SubsystemResourceRegistration;
 import org.jboss.as.controller.descriptions.ParentResourceDescriptionResolver;
@@ -46,10 +42,12 @@ class WasmSubsystemRegistrar implements SubsystemResourceDefinitionRegistrar {
                 .build();
         ManagementResourceRegistrar.of(descriptor).register(registration);
         new WasmProviderRegistrar(RESOLVER).register(registration, context);
-        ResourceDefinition deploymentsDef = new SimpleResourceDefinition(new SimpleResourceDefinition.Parameters(PathElement.pathElement(SUBSYSTEM, NAME),
-                    RESOLVER.createChildResolver(DEPLOYMENT)).setFeature(false).setRuntime());
-        final ManagementResourceRegistration deployment = parent.registerDeploymentModel(deploymentsDef);
-        new WasmDeploymentRegistrar(RESOLVER).register(deployment, context);
+        ManagementResourceRegistration deploymentRegistration = parent.registerDeploymentModel(ResourceDefinition.builder(REGISTRATION, RESOLVER).asRuntime().asNonFeature().build()); // Registers /deployment=*/subsystem=wasm
+        new WasmModuleRegistrar(RESOLVER).register(deploymentRegistration, context); // where this method registers the  /deployment=*/subsystem=wasm/module=* resource
+//        ResourceDefinition deploymentsDef = new SimpleResourceDefinition(new SimpleResourceDefinition.Parameters(PathElement.pathElement(SUBSYSTEM, NAME),
+//                    RESOLVER.createChildResolver(DEPLOYMENT)).setFeature(false).setRuntime());
+//        final ManagementResourceRegistration deployment = parent.registerDeploymentModel(deploymentsDef);
+//        new WasmDeploymentRegistrar(RESOLVER).register(deployment, context);
         return registration;
     }
 }
