@@ -4,16 +4,16 @@
     <parent>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-parent</artifactId>
-        <version>49</version>
+        <version>50-Alpha-1</version>
     </parent>
     <groupId>org.wildfly.generative-ai</groupId>
     <artifactId>wildfly-ai-feature-pack-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Parent AI integration for WildFly</name>
-  
-    <description>Parent of the feature pack for AI integration in WildFly</description>
+    <name>Parent AI integration for WildFly</name>  
+    <description>Parent of the feature pack for AI integration in WildFly</description> 
+    <url>http://wildfly.org</url>
 
     <licenses>
         <license>
@@ -26,12 +26,21 @@
         <connection>scm:git:git@github.com:wildfly-extras/wildfly-ai-feature-pack.git</connection>
         <developerConnection>scm:git:git@github.com:wildfly-extras/wildfly-ai-feature-pack.git</developerConnection>
         <url>https://github.com/wildfly-extras/wildfly-ai-feature-pack</url>
-        <tag>0.5.0</tag>
+        <tag>0.7.0</tag>
     </scm>
 
     <properties>
         <maven.compiler.target>17</maven.compiler.target>
         <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.testSource>17</maven.compiler.testSource>
+        <maven.compiler.testRelease>17</maven.compiler.testRelease>
+        <maven.compiler.testTarget>17</maven.compiler.testTarget>
+        <jdk.min.version>17</jdk.min.version>
+        <!-- release -->
+        <version.gpg.plugin>3.2.8</version.gpg.plugin>
+        <version.nxrm3.plugin>1.0.7</version.nxrm3.plugin>
+        <!-- provisionning -->
         <version.org.wildfly>36.0.1.Final</version.org.wildfly>
         <version.org.wildfly.core>28.0.0.Final</version.org.wildfly.core>
         <version.org.wildfly.common>1.7.0.Final</version.org.wildfly.common>
@@ -69,6 +78,13 @@
         <version.org.neo4j.driver>5.26.3</version.org.neo4j.driver>
         <version.org.reactivestreams.reactive-streams>1.0.4</version.org.reactivestreams.reactive-streams>
 
+        <!-- Nexus deployment settings -->
+        <nexus.serverId>jboss-releases-repository</nexus.serverId>
+        <nexus.repo.name>wildfly-extras-staging</nexus.repo.name>
+        <nexus.repo.url>https://repository.jboss.org/nexus</nexus.repo.url>
+        <nexus.destination.repo.name>releases</nexus.destination.repo.name>
+        <nexus.staging.tag>ai-feature-pack-${project.version}</nexus.staging.tag>
+        <gpg.pinEntryMode>loopback</gpg.pinEntryMode>
     </properties>
 
     <dependencyManagement>
@@ -876,6 +892,9 @@
                 <artifactId>maven-release-plugin</artifactId>
                 <configuration>
                     <tagNameFormat>@{project.version}</tagNameFormat>
+                    <localCheckout>true</localCheckout>
+                    <pushChanges>false</pushChanges>
+                    <preparationGoals>clean install</preparationGoals>
                 </configuration>
             </plugin>
             <plugin>
@@ -896,6 +915,26 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-deploy</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nxrm3-maven-plugin</artifactId>
+                <version>${version.nxrm3.plugin}</version>
+                <configuration>
+                    <serverId>${nexus.serverId}</serverId>
+                    <nexusUrl>${nexus.repo.url}</nexusUrl>
+                    <repository>${nexus.repo.name}</repository>
+                </configuration>
             </plugin>
         </plugins>
         <pluginManagement>
@@ -949,4 +988,135 @@
         <module>wildfly-mcp</module>
         <module>ai-feature-pack</module>
     </modules>
+    <profiles>
+        <!-- Temporarily override the jboss-parent jboss-release profile
+        to add configuration related to Nexus 3 deployment. These
+        are expected to come in a later jboss-parent release -->
+        <!-- TODO remove this content when it is included in jboss-parent -->
+        <profile>
+            <id>jboss-release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>default-deploy</id>
+                                <phase>none</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nxrm3-maven-plugin</artifactId>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>nexus-deploy</id>
+                                <phase>deploy</phase>
+                                <goals>
+                                    <goal>deploy</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <configuration>
+                            <useAgent>true</useAgent>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>${gpg.pinEntryMode}</arg>
+                            </gpgArguments>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>gpg-sign</id>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Use this profile in combination with 'jboss-release' to use
+        the nxrm3-maven-plugin's 'staging-deploy' goal instead of its
+        'deploy' goal. Once the staged deployment is valdated, the
+        person or script doing the release  would move on to use
+        its 'staging-move' goal via a call to
+        'mvn nxrm3:staging-move -Pjboss-staging-move' -->
+        <!-- TODO remove this content when it is included in jboss-parent -->
+        <profile>
+            <id>jboss-staging-deploy</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nxrm3-maven-plugin</artifactId>
+                        <executions>
+                            <!-- Disable the jboss-release profile's 'deploy' goal execution -->
+                            <execution>
+                                <id>nexus-deploy</id>
+                                <phase>none</phase>
+                            </execution>
+                            <execution>
+                                <id>nexus-staging.deploy</id>
+                                <phase>deploy</phase>
+                                <goals>
+                                    <goal>staging-deploy</goal>
+                                </goals>
+                                <configuration>
+                                    <tag>${nexus.staging.tag}</tag>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Used in release workflows that use the 'jboss-staging-deploy' profile,
+        this profile configures the nxrm3-maven-plugin to support command
+        line execution of its 'staging-move' goal. -->
+        <!-- TODO remove this content when it is included in jboss-parent -->
+        <profile>
+            <id>jboss-staging-move</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nxrm3-maven-plugin</artifactId>
+                        <configuration>
+                            <destinationRepository>${nexus.destination.repo.name}</destinationRepository>
+                            <tag>${nexus.staging.tag}</tag>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Used in release workflows that use the 'jboss-staging-deploy' profile,
+        this profile configures the nxrm3-maven-plugin to support command
+        line execution of its 'staging-delete' goal. -->
+        <!-- TODO remove this content when it is included in jboss-parent -->
+        <profile>
+            <id>jboss-staging-delete</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nxrm3-maven-plugin</artifactId>
+                        <configuration>
+                            <tag>${nexus.staging.tag}</tag>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
