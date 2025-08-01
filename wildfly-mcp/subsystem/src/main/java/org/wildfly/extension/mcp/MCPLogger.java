@@ -33,13 +33,13 @@ public interface MCPLogger extends BasicLogger {
 
     @Message(id = 3, value = "Couldn't access the Chat Language Model called %s")
     OperationFailedException chatLanguageModelServiceUnavailable(String chatLanguageModelName);
-    
+
     @LogMessage(level = INFO)
-    @Message(id = 4, value = "Registered MicroProfile MCP endpoint '%s' for host '%s'")
+    @Message(id = 4, value = "Registered MCP endpoint '%s' for host '%s'")
     void endpointRegistered(String path, String hostName);
 
     @LogMessage(level = INFO)
-    @Message(id = 5, value = "Unregistered MicroProfile MCP endpoint '%s' for host '%s'")
+    @Message(id = 5, value = "Unregistered MCP endpoint '%s' for host '%s'")
     void endpointUnregistered(String path, String hostName);
 
     @Message(id = 6, value = "Failed to resolve module for deployment %s")

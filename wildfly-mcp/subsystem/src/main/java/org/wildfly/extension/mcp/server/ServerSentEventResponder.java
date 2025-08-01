@@ -4,6 +4,7 @@
  */
 package org.wildfly.extension.mcp.server;
 
+import static org.wildfly.extension.mcp.api.ConnectionManager.MCP_SESSION_ID_HEADER;
 import io.undertow.server.handlers.sse.ServerSentEventConnection;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
@@ -73,6 +74,7 @@ public class ServerSentEventResponder implements Responder, McpConnection {
 
     public void send(String name, String message) {
         MCPLogger.ROOT_LOGGER.debug("Sending message of type " + name + " with content " + message);
+        connection.getResponseHeaders().add(MCP_SESSION_ID_HEADER, id);
         connection.send(message, name, id, new ServerSentEventConnection.EventCallback() {
             @Override
             public void done(ServerSentEventConnection connection, String data, String event, String id) {
