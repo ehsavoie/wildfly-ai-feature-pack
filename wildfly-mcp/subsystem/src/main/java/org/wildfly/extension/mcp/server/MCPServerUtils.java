@@ -50,6 +50,7 @@ import org.wildfly.extension.mcp.injection.elicitation.ElicitationSenderHolder;
 import org.wildfly.extension.mcp.injection.input.InputResponsesHolder;
 import org.wildfly.extension.mcp.injection.listchange.ListChangeNotifierHolder;
 import org.wildfly.extension.mcp.injection.progress.ProgressHolder;
+import org.wildfly.extension.mcp.injection.resources.ResourceNotifierHolder;
 import org.wildfly.mcp.api.ListChangeNotifier;
 import org.wildfly.mcp.api.tool.InputResponses;
 import org.wildfly.extension.mcp.injection.tool.ArgumentMetadata;
@@ -153,21 +154,26 @@ final class MCPServerUtils {
     }
 
     static void runWithCDIContext(MCPConnection connection, Responder responder, ProgressToken progressToken, Runnable task) {
-        runWithCDIContext(connection, responder, progressToken, null, null, null, task);
+        runWithCDIContext(connection, responder, progressToken, null, null, null, null, task);
     }
 
     static void runWithCDIContext(MCPConnection connection, Responder responder, ProgressToken progressToken,
             RequestMetadata requestMetadata, Runnable task) {
-        runWithCDIContext(connection, responder, progressToken, requestMetadata, null, null, task);
+        runWithCDIContext(connection, responder, progressToken, requestMetadata, null, null, null, task);
     }
 
     static void runWithCDIContext(MCPConnection connection, Responder responder, ProgressToken progressToken,
             RequestMetadata requestMetadata, ListChangeNotifier listChangeNotifier, Runnable task) {
-        runWithCDIContext(connection, responder, progressToken, requestMetadata, listChangeNotifier, null, task);
+        runWithCDIContext(connection, responder, progressToken, requestMetadata, listChangeNotifier, null, null, task);
     }
 
     static void runWithCDIContext(MCPConnection connection, Responder responder, ProgressToken progressToken,
-            RequestMetadata requestMetadata, ListChangeNotifier listChangeNotifier,
+            ResourceMessageHandler resourceHandler, Runnable task) {
+        runWithCDIContext(connection, responder, progressToken, null, null, resourceHandler, null, task);
+    }
+
+    static void runWithCDIContext(MCPConnection connection, Responder responder, ProgressToken progressToken,
+            RequestMetadata requestMetadata, ListChangeNotifier listChangeNotifier, ResourceMessageHandler resourceHandler,
             InputResponses inputResponses, Runnable task) {
         RequestContextController rcc = null;
         try {
@@ -185,6 +191,9 @@ final class MCPServerUtils {
             }
             if (inputResponses != null) {
                 InputResponsesHolder.set(inputResponses);
+            }
+            if (resourceHandler != null) {
+                ResourceNotifierHolder.set(new ResourceNotifierImpl(resourceHandler));
             }
             if (requestMetadata != null) {
                 ClientCapabilitiesHolder.set(new ClientCapabilities() {
@@ -209,6 +218,7 @@ final class MCPServerUtils {
                 ClientCapabilitiesHolder.remove();
                 ListChangeNotifierHolder.remove();
                 InputResponsesHolder.remove();
+                ResourceNotifierHolder.remove();
             }
         } finally {
             if (rcc != null) {

@@ -73,15 +73,17 @@ public class PromptMessageHandler {
     private final ExecutorService executorService;
     private final int pageSize;
     private final RequestStateCodec requestStateCodec;
+    private final ResourceMessageHandler resourceHandler;
 
     PromptMessageHandler(WildFlyMCPRegistry registry, ClassLoader classLoader, ExecutorService executorService,
-            int pageSize, RequestStateCodec requestStateCodec) {
+            int pageSize, RequestStateCodec requestStateCodec, ResourceMessageHandler resourceHandler) {
         this.registry = registry;
         this.mapper = SHARED_MAPPER;
         this.classLoader = classLoader;
         this.executorService = executorService;
         this.pageSize = pageSize;
         this.requestStateCodec = requestStateCodec;
+        this.resourceHandler = resourceHandler;
     }
 
     void promptsList(JsonObject message, Responder responder) {
@@ -163,7 +165,7 @@ public class PromptMessageHandler {
         final ClassLoader prevCL = WildFlySecurityManager.getCurrentContextClassLoaderPrivileged();
         try {
             WildFlySecurityManager.setCurrentContextClassLoaderPrivileged(classLoader);
-            connection.task(executorService.submit(() -> runWithCDIContext(connection, responder, MCPServerUtils.extractProgressToken(params), null, null, inputResponses, () -> {
+            connection.task(executorService.submit(() -> runWithCDIContext(connection, responder, MCPServerUtils.extractProgressToken(params), null, null, resourceHandler, inputResponses, () -> {
                 try {
                     MethodMetadata methodMetadata = metadata.method();
                     Class<?> clazz = classLoader.loadClass(methodMetadata.declaringClassName());
