@@ -1,0 +1,91 @@
+---
+title: WildFly AI Feature Pack
+description: A Galleon feature pack that brings AI capabilities to WildFly -- LLM providers, MCP server and client, embedding stores, RAG, and WebAssembly tool execution.
+name: WildFly AI Feature Pack
+simple-name: WildFly AI
+image: logo.png
+social-github: wildfly/wildfly-ai-feature-pack
+layout: home
+---
+
+
+{#roq/hero logo=site.url("/images/logo.png")}
+  {#title}WildFly AI Feature Pack{/title}
+  {#tagline}AI Integration for Jakarta EE{/tagline}
+  {#subtitle}A Galleon feature pack that brings AI capabilities to WildFly. Connect to LLM providers, expose MCP servers, build RAG pipelines, and run WebAssembly tools -- all managed by the WildFly subsystem.{/subtitle}
+  <a href="getting-started" class="btn btn-primary">Getting Started <i class="fa-solid fa-arrow-right"></i></a>
+  <a href="mcp" class="btn btn-secondary">MCP Guide <i class="fa-solid fa-arrow-right"></i></a>
+{/}
+
+<div class="roq-features">
+  {#roq/featureCard icon="fa-comments" title="Chat Models"}
+    Connect to OpenAI, Ollama, Mistral, Gemini, GitHub Models, and Groq. Both synchronous and streaming modes with configurable environment variables.
+  {/}
+  {#roq/featureCard icon="fa-database" title="Embedding & RAG"}
+    In-memory, Neo4j, Weaviate, and Chroma embedding stores. Built-in embedding models and content retrievers for Retrieval-Augmented Generation.
+  {/}
+  {#roq/featureCard icon="fa-plug" title="MCP Support"}
+    Full Model Context Protocol support -- expose Jakarta EE beans as MCP servers with tools, prompts, and resources, or connect to external MCP servers as a client.
+  {/}
+  {#roq/featureCard icon="fa-microchip" title="WASM Tools"}
+    Run WebAssembly WASI modules as MCP tools via the Chicory runtime. Sandboxed execution with configurable memory limits and network access.
+  {/}
+</div>
+
+<section class="roq-section">
+  <h2>Quick Install</h2>
+  <p>Provision the feature pack alongside WildFly using the WildFly Maven Plugin:</p>
+
+<pre><code class="language-xml">&lt;feature-packs&gt;
+  &lt;feature-pack&gt;
+    &lt;location&gt;org.wildfly:wildfly-galleon-pack:39.0.0.Final&lt;/location&gt;
+  &lt;/feature-pack&gt;
+  &lt;feature-pack&gt;
+    &lt;location&gt;org.wildfly.generative-ai:wildfly-ai-feature-pack:0.20.2-SNAPSHOT&lt;/location&gt;
+  &lt;/feature-pack&gt;
+&lt;/feature-packs&gt;
+&lt;layers&gt;
+  &lt;layer&gt;cloud-server&lt;/layer&gt;
+  &lt;layer&gt;ollama-chat-model&lt;/layer&gt;
+&lt;/layers&gt;</code></pre>
+
+  <p>See the <a href="getting-started">Getting Started</a> guide for full setup instructions.</p>
+</section>
+
+<section class="roq-section">
+  <h2>Current Stack</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Component</th>
+        <th>Version</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>WildFly</td>
+        <td>39.0.0.Final</td>
+      </tr>
+      <tr>
+        <td>LangChain4j</td>
+        <td>1.12.2</td>
+      </tr>
+      <tr>
+        <td>LangChain4j-CDI</td>
+        <td>1.1.0</td>
+      </tr>
+      <tr>
+        <td>Chicory (WASM)</td>
+        <td>1.7.5</td>
+      </tr>
+      <tr>
+        <td>Extism SDK</td>
+        <td>0.3.0</td>
+      </tr>
+      <tr>
+        <td>Java</td>
+        <td>17+</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
