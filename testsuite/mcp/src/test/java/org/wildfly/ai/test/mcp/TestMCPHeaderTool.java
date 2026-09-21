@@ -12,7 +12,7 @@ public class TestMCPHeaderTool {
 
     @Tool(name = "greet-with-header", description = "Greets a user using a header-provided language")
     String greetWithHeader(
-            @McpParamHeader("language") String language,
+            @ToolArg(required = false, description = "Language for greeting") @McpParamHeader("language") String language,
             @ToolArg(description = "Name to greet") String name) {
         String lang = language != null ? language : "en";
         return switch (lang) {
@@ -23,7 +23,7 @@ public class TestMCPHeaderTool {
     }
 
     @Tool(name = "header-only-echo", description = "Echoes the value of a required header")
-    String headerOnlyEcho(@McpParamHeader(value = "echo-value", required = true) String value) {
+    String headerOnlyEcho(@ToolArg(description = "Value to echo") @McpParamHeader("echo-value") String value) {
         return "echo: " + value;
     }
 }
