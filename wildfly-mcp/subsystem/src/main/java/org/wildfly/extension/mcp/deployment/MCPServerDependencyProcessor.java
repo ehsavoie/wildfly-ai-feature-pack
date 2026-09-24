@@ -181,16 +181,15 @@ public class MCPServerDependencyProcessor implements DeploymentUnitProcessor {
                     arguments.add(new ArgumentMetadata(param.name(), "", false,
                             org.wildfly.mcp.api.tool.InputResponses.class));
                 } else {
-                    AnnotationInstance headerAnnotation = param.annotation(MCP_HEADER);
-                    if (headerAnnotation != null) {
-                        String headerName = headerAnnotation.value().asString();
-                        boolean required = headerAnnotation.value(REQUIRED) != null && headerAnnotation.value(REQUIRED).asBoolean();
-                        Type type = JandexReflection.loadType(param.type());
-                        arguments.add(new ArgumentMetadata(param.name(), "", required, type, headerName));
-                    } else {
-                        AnnotationInstance toolArgAnnotation = param.annotation(toolArg);
-                        if (toolArgAnnotation != null) {
-                            arguments.add(buildArgument(toolArgAnnotation));
+                    AnnotationInstance toolArgAnnotation = param.annotation(toolArg);
+                    if (toolArgAnnotation != null) {
+                        ArgumentMetadata base = buildArgument(toolArgAnnotation);
+                        AnnotationInstance headerAnnotation = param.annotation(MCP_HEADER);
+                        if (headerAnnotation != null) {
+                            String headerName = headerAnnotation.value().asString();
+                            arguments.add(new ArgumentMetadata(base.name(), base.description(), base.required(), base.type(), headerName));
+                        } else {
+                            arguments.add(base);
                         }
                     }
                 }

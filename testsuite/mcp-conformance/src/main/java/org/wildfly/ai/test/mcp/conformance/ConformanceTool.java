@@ -40,7 +40,7 @@ public class ConformanceTool {
     }
 
     @Tool(name = "_test_custom_header", description = "Echoes custom header value for conformance testing")
-    String testCustomHeader(@McpParamHeader("custom-key") String customKey) {
+    String testCustomHeader(@ToolArg(required = false, description = "Custom header key") @McpParamHeader("custom-key") String customKey) {
         return customKey != null ? customKey : "(no header)";
     }
 

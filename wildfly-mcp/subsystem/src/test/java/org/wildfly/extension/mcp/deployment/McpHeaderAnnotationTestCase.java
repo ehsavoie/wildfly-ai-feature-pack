@@ -122,18 +122,18 @@ class McpHeaderAnnotationTestCase {
     static class HeaderFixtures {
 
         @Tool(name = "withHeader", description = "Tool with a header param")
-        String withHeader(@McpParamHeader("auth-token") String token,
+        String withHeader(@ToolArg(required = false, description = "Auth token") @McpParamHeader("auth-token") String token,
                           @ToolArg(description = "The message") String message) {
             return token + ": " + message;
         }
 
         @Tool(name = "withRequiredHeader", description = "Tool with a required header")
-        String withRequiredHeader(@McpParamHeader(value = "api-key", required = true) String apiKey) {
+        String withRequiredHeader(@ToolArg(required = true, description = "API key") @McpParamHeader("api-key") String apiKey) {
             return apiKey;
         }
 
         @Tool(name = "headerOnly", description = "Tool with only header params")
-        String headerOnly(@McpParamHeader("tenant") String tenant) {
+        String headerOnly(@ToolArg(description = "Tenant identifier") @McpParamHeader("tenant") String tenant) {
             return tenant;
         }
 
@@ -143,9 +143,9 @@ class McpHeaderAnnotationTestCase {
         }
 
         @Tool(name = "multipleHeaders", description = "Tool with multiple headers and args")
-        String multipleHeaders(@McpParamHeader("token") String token,
+        String multipleHeaders(@ToolArg(description = "Token") @McpParamHeader("token") String token,
                                @ToolArg(description = "Data") String data,
-                               @McpParamHeader("tenant-id") String tenantId) {
+                               @ToolArg(description = "Tenant ID") @McpParamHeader("tenant-id") String tenantId) {
             return token + "/" + data + "/" + tenantId;
         }
     }
