@@ -19,5 +19,6 @@
         <param name="sse-path" value="sse"/>
         <param name="messages-path" value="messages"/>
         <param name="streamable-path" value="stream"/>
+        <param name="request-state-secret" value="${org.wildfly.ai.mcp.server.request-state-secret,env.MCP_SERVER_REQUEST_STATE_SECRET:undefined}"/>
     </feature>
 </layer-spec>

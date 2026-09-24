@@ -29,6 +29,9 @@ public interface MCPApiLogger extends BasicLogger {
     @Message(id = 4, value = "Parameter %s must have the same size as parameter %s")
     IllegalArgumentException parameterMustHaveSameSize(String parameter1, String parameter2);
 
-    @Message(id = 5, value = "Parameter 'max' (%s) can not be less than 'min' (%s) ")
+    @Message(id = 5, value = "Parameter 'max' (%s) can not be less than 'min' (%s).")
     IllegalArgumentException maxCanNotBeLessThanMin(Number max, Number min);
+
+    @Message(id = 6, value = "Client missing required capability: %s.")
+    String missingClientCapability(String capability);
 }

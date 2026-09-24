@@ -17,8 +17,10 @@ import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.ResourceDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
+import org.jboss.as.controller.StringListAttributeDefinition;
 import org.jboss.as.controller.SubsystemRegistration;
 import org.jboss.as.controller.SubsystemResourceRegistration;
+import org.jboss.as.controller.access.management.SensitiveTargetAccessConstraintDefinition;
 import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.as.controller.descriptions.ParentResourceDescriptionResolver;
 import org.jboss.as.controller.descriptions.SubsystemResourceDescriptionResolver;
@@ -46,6 +48,7 @@ import org.wildfly.subsystem.resource.operation.ResourceOperationRuntimeHandler;
 class MCPSubsystemRegistrar implements SubsystemResourceDefinitionRegistrar {
 
     static final String NAME = "mcp";
+    static final String UNDEFINED_SENTINEL = new ModelNode().asString();
     public static final RuntimeCapability<Void> MCP_CAPABILITY = RuntimeCapability.Builder.of(MCP_CAPABILITY_NAME).setAllowMultipleRegistrations(false).build();
     static final SubsystemResourceRegistration REGISTRATION = SubsystemResourceRegistration.of(NAME, Stability.EXPERIMENTAL);
     static final ParentResourceDescriptionResolver RESOLVER = new SubsystemResourceDescriptionResolver(NAME, MCPSubsystemRegistrar.class);
@@ -87,7 +90,40 @@ class MCPSubsystemRegistrar implements SubsystemResourceDefinitionRegistrar {
             .setRestartAllServices()
             .setStability(Stability.EXPERIMENTAL)
             .build();
-    public static final Collection<AttributeDefinition> ATTRIBUTES = List.of(MESSAGES_PATH, SSE_PATH, STREAMABLE_PATH, PAGE_SIZE, TIMEOUT);
+    public static final SimpleAttributeDefinition REQUEST_STATE_SECRET = SimpleAttributeDefinitionBuilder.create("request-state-secret", ModelType.STRING, true)
+            .addAccessConstraint(SensitiveTargetAccessConstraintDefinition.CREDENTIAL)
+            .setAllowExpression(true)
+            .setRestartAllServices()
+            .setStability(Stability.EXPERIMENTAL)
+            .setValidator(RequestStateSecretValidator.INSTANCE)
+            .build();
+    public static final StringListAttributeDefinition ALLOWED_ORIGINS = new StringListAttributeDefinition.Builder("allowed-origins")
+            .setAllowExpression(true)
+            .setRequired(false)
+            .setRestartAllServices()
+            .setStability(Stability.EXPERIMENTAL)
+            .build();
+    public static final SimpleAttributeDefinition CACHE_TTL = SimpleAttributeDefinitionBuilder.create("cache-ttl", ModelType.LONG, true)
+            .setAllowExpression(true)
+            .setDefaultValue(new ModelNode(3_600_000L))
+            .setValidator(BoundedParameterValidator.longBuilder().withLowerBound(Bound.<Long>inclusive(0L)).build())
+            .setRestartAllServices()
+            .setStability(Stability.EXPERIMENTAL)
+            .build();
+    public static final DurationAttributeDefinition REQUEST_TIMEOUT = DurationAttributeDefinition.builder("request-timeout", ChronoUnit.SECONDS)
+            .setAllowExpression(true)
+            .setDefaultValue(Duration.ofMinutes(5))
+            .setRestartAllServices()
+            .setStability(Stability.EXPERIMENTAL)
+            .build();
+    public static final SimpleAttributeDefinition CACHE_SCOPE = SimpleAttributeDefinitionBuilder.create("cache-scope", ModelType.STRING, true)
+            .setAllowExpression(true)
+            .setDefaultValue(new ModelNode("public"))
+            .setValidator(new org.jboss.as.controller.operations.validation.StringAllowedValuesValidator("public", "private"))
+            .setRestartAllServices()
+            .setStability(Stability.EXPERIMENTAL)
+            .build();
+    public static final Collection<AttributeDefinition> ATTRIBUTES = List.of(MESSAGES_PATH, SSE_PATH, STREAMABLE_PATH, PAGE_SIZE, TIMEOUT, REQUEST_TIMEOUT, REQUEST_STATE_SECRET, ALLOWED_ORIGINS, CACHE_TTL, CACHE_SCOPE);
 
     @Override
     public ManagementResourceRegistration register(SubsystemRegistration parent, ManagementResourceRegistrationContext context) {
