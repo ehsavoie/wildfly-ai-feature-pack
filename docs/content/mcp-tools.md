@@ -51,23 +51,24 @@ Object elicitingTool(ClientCapabilities capabilities, InputResponses input) {
 
 ## McpParamHeader
 
-`org.wildfly.mcp.api.McpParamHeader` is a parameter annotation that injects a value from an MCP transport header into a tool method parameter. This enables passing out-of-band context (authentication tokens, tenant IDs, locale preferences) without polluting the tool's argument schema.
+`org.wildfly.mcp.api.McpParamHeader` designates a `@Tool` method parameter whose value clients must mirror into an HTTP request header. It is a **supplemental annotation to `@ToolArg`** -- `@ToolArg` describes the property (name, description, required status) while `@McpParamHeader` adds the `x-mcp-header` keyword to that same property in the tool's JSON Schema.
 
-### Header Resolution
+When a client calls the tool over Streamable HTTP transport, it sends the argument value in the `Mcp-Param-<name>` header alongside the request body, enabling intermediaries (gateways, load balancers) to route or inspect calls without parsing the body.
 
-Values are extracted from two sources, in order of precedence:
+### Annotation Attribute
 
-1. HTTP request header: `x-mcp-header-<name>` (e.g. `x-mcp-header-language`)
-2. JSON-RPC payload: `params._meta.headers.<name>`
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `value` | `String` | The header name carried by the `x-mcp-header` keyword |
 
-The HTTP header takes precedence when both are present.
+The `required` status and `description` are specified on the companion `@ToolArg` annotation.
 
-### Annotation Attributes
+### Constraints
 
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `value` | `String` | -- | The header name (without the `x-mcp-header-` prefix) |
-| `required` | `boolean` | `false` | When `true`, a missing header returns a `-32602 InvalidParams` error |
+- `value()` must not be empty.
+- `value()` must contain only ASCII characters, excluding space and `:`.
+- `value()` must be unique (case-insensitive) among the parameters of a single tool.
+- The annotated parameter must map to a primitive JSON Schema type: `integer`, `string`, or `boolean` -- `number` is not permitted.
 
 ### Usage
 
@@ -75,7 +76,8 @@ The HTTP header takes precedence when both are present.
 import org.wildfly.mcp.api.McpParamHeader;
 
 @Tool(name = "greet", description = "Greets in the requested language")
-String greet(@McpParamHeader("language") String language,
+String greet(@ToolArg(required = false, description = "Language for greeting")
+             @McpParamHeader("language") String language,
              @ToolArg(description = "Name to greet") String name) {
     String lang = language != null ? language : "en";
     return switch (lang) {
@@ -90,8 +92,9 @@ A required header that rejects the request when missing:
 
 ```java
 @Tool(name = "secure_op", description = "Requires an auth token")
-String secureOp(@McpParamHeader(value = "auth-token", required = true) String token) {
-    // token is guaranteed non-null here
+String secureOp(@ToolArg(description = "Auth token")
+                @McpParamHeader("auth-token") String token) {
+    // token is guaranteed non-null here (required defaults to true on @ToolArg)
     return "Authenticated: " + token;
 }
 ```
@@ -100,20 +103,51 @@ Multiple headers can be combined with regular tool arguments:
 
 ```java
 @Tool(name = "multi_header", description = "Uses multiple headers")
-String multiHeader(@McpParamHeader("token") String token,
+String multiHeader(@ToolArg(description = "Auth token") @McpParamHeader("token") String token,
                    @ToolArg(description = "Input data") String data,
-                   @McpParamHeader("tenant-id") String tenantId) {
+                   @ToolArg(description = "Tenant identifier") @McpParamHeader("tenant-id") String tenantId) {
     return "tenant=" + tenantId + " data=" + data;
 }
 ```
 
+### Generated JSON Schema
+
+For the `greet` example above, the generated input schema is:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "language": {
+      "type": "string",
+      "description": "Language for greeting",
+      "x-mcp-header": "language"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name to greet"
+    }
+  },
+  "required": ["name"]
+}
+```
+
+### Header Resolution
+
+Values are resolved from two sources, in order of precedence:
+
+1. HTTP request header: `Mcp-Param-<name>` (e.g. `Mcp-Param-language`)
+2. JSON-RPC payload: `params._meta.headers.<name>`
+
+The HTTP header takes precedence when both are present. When both the header and the body argument are present, the server validates that they match -- a mismatch returns a `400` error.
+
 ### Sending Headers from a Client
 
-Over HTTP, set the prefixed header on the request:
+Over HTTP, set the `Mcp-Param-` prefixed header on the request:
 
 ```
 POST /mcp HTTP/1.1
-x-mcp-header-language: fr
+Mcp-Param-language: fr
 Content-Type: application/json
 ```
 
@@ -223,7 +257,7 @@ A tool can use all APIs together:
 
 ```java
 @Tool(name = "full_featured", description = "Uses headers, capabilities, and MRTR")
-Object fullFeatured(@McpParamHeader("tenant") String tenant,
+Object fullFeatured(@ToolArg(description = "Tenant identifier") @McpParamHeader("tenant") String tenant,
                     @ToolArg(description = "Action to perform") String action,
                     ClientCapabilities capabilities,
                     InputResponses input) {
