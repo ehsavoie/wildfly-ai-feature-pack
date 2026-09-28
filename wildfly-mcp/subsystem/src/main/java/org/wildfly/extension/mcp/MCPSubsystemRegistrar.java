@@ -7,6 +7,9 @@ package org.wildfly.extension.mcp;
 import static org.jboss.as.controller.PathElement.pathElement;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEPLOYMENT;
 import static org.wildfly.extension.mcp.Capabilities.MCP_CAPABILITY_NAME;
+import static org.wildfly.extension.mcp.MCPEndpointConfiguration.DEFAULT_CACHE_TIME_TO_LIVE;
+import static org.wildfly.extension.mcp.MCPEndpointConfiguration.DEFAULT_REQUEST_TIMEOUT;
+import static org.wildfly.extension.mcp.MCPEndpointConfiguration.DEFAULT_TIMEOUT;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -17,8 +20,10 @@ import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.ResourceDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
+import org.jboss.as.controller.StringListAttributeDefinition;
 import org.jboss.as.controller.SubsystemRegistration;
 import org.jboss.as.controller.SubsystemResourceRegistration;
+import org.jboss.as.controller.access.management.SensitiveTargetAccessConstraintDefinition;
 import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.as.controller.descriptions.ParentResourceDescriptionResolver;
 import org.jboss.as.controller.descriptions.SubsystemResourceDescriptionResolver;
@@ -34,6 +39,7 @@ import org.wildfly.extension.mcp.deployment.MCPServerCDIProcessor;
 import org.wildfly.extension.mcp.deployment.MCPServerDependencyProcessor;
 import org.wildfly.extension.mcp.deployment.MCPServerDeploymentProcessor;
 import org.wildfly.subsystem.resource.DurationAttributeDefinition;
+import org.wildfly.subsystem.resource.EnumAttributeDefinition;
 import org.wildfly.subsystem.resource.ManagementResourceRegistrar;
 import org.wildfly.subsystem.resource.ManagementResourceRegistrationContext;
 import org.wildfly.subsystem.resource.ResourceDescriptor;
@@ -46,6 +52,7 @@ import org.wildfly.subsystem.resource.operation.ResourceOperationRuntimeHandler;
 class MCPSubsystemRegistrar implements SubsystemResourceDefinitionRegistrar {
 
     static final String NAME = "mcp";
+    static final String UNDEFINED_SENTINEL = new ModelNode().asString();
     public static final RuntimeCapability<Void> MCP_CAPABILITY = RuntimeCapability.Builder.of(MCP_CAPABILITY_NAME).setAllowMultipleRegistrations(false).build();
     static final SubsystemResourceRegistration REGISTRATION = SubsystemResourceRegistration.of(NAME, Stability.EXPERIMENTAL);
     static final ParentResourceDescriptionResolver RESOLVER = new SubsystemResourceDescriptionResolver(NAME, MCPSubsystemRegistrar.class);
@@ -83,11 +90,46 @@ class MCPSubsystemRegistrar implements SubsystemResourceDefinitionRegistrar {
             .build();
     public static final DurationAttributeDefinition TIMEOUT = DurationAttributeDefinition.builder("timeout", ChronoUnit.SECONDS)
             .setAllowExpression(true)
-            .setDefaultValue(Duration.ofMinutes(30))
+            .setDefaultValue(DEFAULT_TIMEOUT)
+            .withLowerBound((Bound.inclusive(Duration.ZERO)))
             .setRestartAllServices()
             .setStability(Stability.EXPERIMENTAL)
             .build();
-    public static final Collection<AttributeDefinition> ATTRIBUTES = List.of(MESSAGES_PATH, SSE_PATH, STREAMABLE_PATH, PAGE_SIZE, TIMEOUT);
+    public static final SimpleAttributeDefinition REQUEST_STATE_SECRET = SimpleAttributeDefinitionBuilder.create("request-state-secret", ModelType.STRING, true)
+            .addAccessConstraint(SensitiveTargetAccessConstraintDefinition.CREDENTIAL)
+            .setAllowExpression(true)
+            .setRestartAllServices()
+            .setStability(Stability.EXPERIMENTAL)
+            .setValidator(RequestStateSecretValidator.INSTANCE)
+            .build();
+    public static final StringListAttributeDefinition ALLOWED_ORIGINS = new StringListAttributeDefinition.Builder("allowed-origins")
+            .setAllowExpression(true)
+            .setRequired(false)
+            .setRestartAllServices()
+            .setStability(Stability.EXPERIMENTAL)
+            .build();
+    public static final DurationAttributeDefinition CACHE_TTL = DurationAttributeDefinition.builder("cache-ttl",  ChronoUnit.MILLIS)
+            .setAllowExpression(true)
+            .setDefaultValue(DEFAULT_CACHE_TIME_TO_LIVE)
+            .withLowerBound((Bound.inclusive(Duration.ZERO)))
+            .setRestartAllServices()
+            .setStability(Stability.EXPERIMENTAL)
+            .build();
+    public static final DurationAttributeDefinition REQUEST_TIMEOUT = DurationAttributeDefinition.builder("request-timeout", ChronoUnit.SECONDS)
+            .setAllowExpression(true)
+            .setDefaultValue(DEFAULT_REQUEST_TIMEOUT)
+            .withLowerBound((Bound.inclusive(Duration.ZERO)))
+            .setRestartAllServices()
+            .setStability(Stability.EXPERIMENTAL)
+            .build();
+    public static final EnumAttributeDefinition<CacheScope> CACHE_SCOPE = EnumAttributeDefinition.toStringBuilder("cache-scope", CacheScope.class)
+            .setDefaultValue(CacheScope.PUBLIC)
+            .setRequired(false)
+            .setAllowExpression(true)
+            .setRestartAllServices()
+            .setStability(Stability.EXPERIMENTAL)
+            .build();
+    public static final Collection<AttributeDefinition> ATTRIBUTES = List.of(MESSAGES_PATH, SSE_PATH, STREAMABLE_PATH, PAGE_SIZE, TIMEOUT, REQUEST_TIMEOUT, REQUEST_STATE_SECRET, ALLOWED_ORIGINS, CACHE_TTL, CACHE_SCOPE);
 
     @Override
     public ManagementResourceRegistration register(SubsystemRegistration parent, ManagementResourceRegistrationContext context) {
