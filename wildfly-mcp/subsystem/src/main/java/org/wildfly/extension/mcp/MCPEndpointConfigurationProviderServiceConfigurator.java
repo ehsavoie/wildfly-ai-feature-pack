@@ -8,9 +8,19 @@ import static org.wildfly.extension.mcp.Capabilities.MCP_SERVER_PROVIDER_CAPABIL
 import static org.wildfly.extension.mcp.MCPSubsystemRegistrar.MESSAGES_PATH;
 import static org.wildfly.extension.mcp.MCPSubsystemRegistrar.PAGE_SIZE;
 import static org.wildfly.extension.mcp.MCPSubsystemRegistrar.SSE_PATH;
+import static org.wildfly.extension.mcp.MCPSubsystemRegistrar.REQUEST_STATE_SECRET;
+import static org.wildfly.extension.mcp.MCPSubsystemRegistrar.ALLOWED_ORIGINS;
 import static org.wildfly.extension.mcp.MCPSubsystemRegistrar.STREAMABLE_PATH;
 import static org.wildfly.extension.mcp.MCPSubsystemRegistrar.TIMEOUT;
+import static org.wildfly.extension.mcp.MCPSubsystemRegistrar.REQUEST_TIMEOUT;
+import static org.wildfly.extension.mcp.MCPSubsystemRegistrar.CACHE_TTL;
+import static org.wildfly.extension.mcp.MCPSubsystemRegistrar.CACHE_SCOPE;
 
+import java.time.Duration;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
@@ -29,10 +39,20 @@ public class MCPEndpointConfigurationProviderServiceConfigurator implements Reso
         final String streamablePath = STREAMABLE_PATH.resolveModelAttribute(context, model).asString();
         final int pageSize = PAGE_SIZE.resolveModelAttribute(context, model).asInt(0);
         final long timeout = TIMEOUT.resolve(context, model).getSeconds();
+        ModelNode secretNode = REQUEST_STATE_SECRET.resolveModelAttribute(context, model);
+        final String requestStateSecret = secretNode.isDefined() && !MCPSubsystemRegistrar.UNDEFINED_SENTINEL.equals(secretNode.asString()) ? secretNode.asString() : null;
+        final Duration requestTimeoutSeconds = REQUEST_TIMEOUT.resolve(context, model);
+        List<String> originsList = ALLOWED_ORIGINS.unwrap(context, model);
+        final Set<String> allowedOrigins = originsList.isEmpty()
+                ? Collections.emptySet()
+                : Collections.unmodifiableSet(new LinkedHashSet<>(originsList));
+        final Duration cacheTtlMs = CACHE_TTL.resolve(context, model);
+        final CacheScope cacheScope = CacheScope.fromString(CACHE_SCOPE.resolveModelAttribute(context, model).asString());
         Supplier<MCPEndpointConfiguration> factory = new Supplier<>() {
             @Override
             public MCPEndpointConfiguration get() {
-                return new MCPEndpointConfiguration(ssePath, messagesPath, streamablePath, pageSize, timeout);
+                return new MCPEndpointConfiguration(ssePath, messagesPath, streamablePath, pageSize, timeout,
+                        requestTimeoutSeconds, requestStateSecret, allowedOrigins, cacheTtlMs, cacheScope);
             }
         };
         return CapabilityServiceInstaller.BlockingBuilder.of(MCP_SERVER_PROVIDER_CAPABILITY, factory)
