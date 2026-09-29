@@ -67,9 +67,94 @@ String getConfig() {
 
 ### Supported Transports
 
-The MCP server supports:
-- **Streamable HTTP** -- POST to the `/mcp` endpoint
-- **Server-Sent Events (SSE)** -- Legacy SSE transport
+The MCP server exposes a single `/mcp` endpoint that automatically negotiates the protocol version based on the `MCP-Protocol-Version` header sent by the client. All three spec versions are handled by the same endpoint:
+
+- **Streamable HTTP** (all versions) -- POST to `/mcp`
+- **Server-Sent Events (SSE)** -- Legacy SSE transport, used when the client does not send a protocol version header
+
+## MCP Protocol Versions
+
+The server supports three MCP spec versions on a single endpoint. The version is negotiated per-connection using the `MCP-Protocol-Version` request header during `initialize`.
+
+| Version | Key additions |
+|---------|---------------|
+| `2025-03-26` | Baseline: tools, prompts, resources, SSE transport |
+| `2025-11-25` | Streamable HTTP transport, pagination, cancellation |
+| `2026-07-28` | `server/discover`, `subscriptions/listen`, stateless connections, cache metadata |
+
+Clients that do not send a version header are handled using the legacy SSE transport (equivalent to `2025-03-26`). Clients that request an unsupported version receive an error listing the supported versions.
+
+## Service Discovery (`server/discover`)
+
+Introduced in `2026-07-28`. A client can call `server/discover` at any point -- before, during, or after the `initialize` handshake -- to retrieve the server's supported protocol versions, capabilities, and cache hints without committing to a session.
+
+The response contains:
+
+| Field | Description |
+|-------|-------------|
+| `supportedVersions` | Array of spec version strings the server accepts |
+| `capabilities` | Same capabilities object returned by `initialize` |
+| `serverInfo` | `{ name, version }` of the server |
+| `_meta.ttlMs` | Suggested time-to-live in milliseconds for caching this response |
+| `_meta.cacheScope` | `"public"` or `"private"` cache directive |
+
+`server/discover` is also available to stateless connections (see [Stateless Connections](#stateless-connections)).
+
+## List-Changed Notifications
+
+The server can push `notifications/tools/list_changed`, `notifications/prompts/list_changed`, and `notifications/resources/list_changed` to all connected clients whenever the set of available tools, prompts, or resources changes at runtime.
+
+Inject `org.wildfly.mcp.api.ListChangeNotifier` as a tool method parameter (the framework resolves it automatically and it does not appear in the tool's input schema), then call the appropriate method:
+
+```java
+import org.wildfly.mcp.api.ListChangeNotifier;
+
+@Tool(name = "reload_tools", description = "Reloads the tool registry and notifies clients")
+String reloadTools(ListChangeNotifier notifier) {
+    // ... reload logic ...
+    notifier.notifyToolsChanged();
+    return "Tools reloaded";
+}
+```
+
+| Method | Notification sent |
+|--------|-------------------|
+| `notifyToolsChanged()` | `notifications/tools/list_changed` |
+| `notifyPromptsChanged()` | `notifications/prompts/list_changed` |
+| `notifyResourcesChanged()` | `notifications/resources/list_changed` |
+
+## Resource Subscriptions
+
+Introduced in `2026-07-28`. Clients can call `subscriptions/listen` with a list of `{ type, uri }` targets to receive `notifications/resources/updated` when those resources change. Each `subscriptions/listen` call **replaces** the client's entire subscription set -- it is not additive. Sending an empty list clears all subscriptions.
+
+The standard `resources/subscribe` and `resources/unsubscribe` methods (from earlier spec versions) are also supported for per-resource management.
+
+> **Note:** `notifications/message` (logging notifications) are never delivered on subscription streams.
+
+## Cache Metadata
+
+The `server/discover` response includes `_meta.ttlMs` and `_meta.cacheScope` to help clients cache discovery results and reduce round-trips. Configure these values on the MCP subsystem resource:
+
+| Attribute | Default | Description |
+|-----------|---------|-------------|
+| `cache-ttl` | `3600000` ms (1 hour) | How long clients may cache the discover response |
+| `cache-scope` | `public` | `public` (shared caches allowed) or `private` (per-client only) |
+
+```bash
+/subsystem=mcp:write-attribute(name=cache-ttl, value=300000)
+/subsystem=mcp:write-attribute(name=cache-scope, value=private)
+```
+
+## Stateless Connections
+
+Introduced in `2026-07-28`. A stateless connection is a per-request connection that skips the `initialize` / `initialized` handshake. The server treats the connection as already in the `IN_OPERATION` state, deriving client capabilities and protocol version from the `MCP-Protocol-Version` and related headers on each request.
+
+Stateless connections are suitable for:
+- Clients calling `server/discover` without establishing a session
+- Serverless or short-lived runtimes that cannot maintain persistent connections
+- Intermediaries forwarding isolated requests
+
+Stateless connections are not registered in the connection manager and are not subject to idle-timeout cleanup. Each request creates an independent connection with a unique ID.
 
 ## MCP Client
 
