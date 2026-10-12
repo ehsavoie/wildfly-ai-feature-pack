@@ -8,9 +8,4 @@
 #
 # See https://github.com/modelcontextprotocol/conformance for details.
 #
-# Remaining failures (2):
-#   input-required-result-basic-sampling: server does not implement sampling/createMessage dispatch (not planned)
-#   input-required-result-basic-list-roots: server does not implement roots/list dispatch (not planned)
-server:
-  - input-required-result-basic-sampling
-  - input-required-result-basic-list-roots
+server: []

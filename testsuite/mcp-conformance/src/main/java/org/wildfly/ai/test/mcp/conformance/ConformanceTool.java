@@ -8,6 +8,7 @@ import static org.wildfly.ai.test.mcp.conformance.ConformanceFixtures.MINIMAL_PN
 import static org.wildfly.ai.test.mcp.conformance.ConformanceFixtures.MINIMAL_WAV;
 
 import jakarta.json.Json;
+import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
 
 import java.util.List;
@@ -215,6 +216,37 @@ public class ConformanceTool {
             @ToolArg(description = "Phone number", required = false) String phone,
             @ToolArg(description = "Email address", required = false) String email) {
         return ToolResponse.ofText("JSON Schema 2020-12 tool called with name=" + name);
+    }
+
+    @Tool(name = "test_input_required_result_sampling",
+            description = "Tests basic InputRequiredResult flow with a single sampling/createMessage input request (SEP-2322)")
+    Object testInputRequiredResultSampling(InputResponses input) {
+        if (input.hasResponses() && input.responses().containsKey("capital_question")) {
+            JsonObject samplingResult = input.responses().get("capital_question");
+            return ToolResponse.ofText("Sampling response: " + samplingResult.toString());
+        }
+        return InputRequiredResult.builder()
+                .addSampling("capital_question",
+                        Json.createArrayBuilder()
+                                .add(Json.createObjectBuilder()
+                                        .add("role", "user")
+                                        .add("content", Json.createObjectBuilder()
+                                                .add("type", "text")
+                                                .add("text", "What is the capital of France?"))),
+                        100)
+                .build();
+    }
+
+    @Tool(name = "test_input_required_result_list_roots",
+            description = "Tests basic InputRequiredResult flow with a single roots/list input request (SEP-2322)")
+    Object testInputRequiredResultListRoots(InputResponses input) {
+        if (input.hasResponses() && input.responses().containsKey("client_roots")) {
+            JsonObject rootsResult = input.responses().get("client_roots");
+            return ToolResponse.ofText("Roots received: " + rootsResult.toString());
+        }
+        return InputRequiredResult.builder()
+                .addRootsList("client_roots")
+                .build();
     }
 
     @Tool(name = "test_input_required_result_elicitation",
