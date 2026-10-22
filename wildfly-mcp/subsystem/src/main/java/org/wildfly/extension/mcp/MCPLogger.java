@@ -260,6 +260,9 @@ public interface MCPLogger extends BasicLogger {
     @Message(id = Message.NONE, value = "Unknown session: %s")
     String unknownSessionError(String sessionId);
 
+    @Message(id = Message.NONE, value = "Missing Mcp-Session-Id header; required to terminate a session")
+    String missingSessionIdForTermination();
+
     @Message(id = Message.NONE, value = "Invalid JSON")
     String invalidJson();
 

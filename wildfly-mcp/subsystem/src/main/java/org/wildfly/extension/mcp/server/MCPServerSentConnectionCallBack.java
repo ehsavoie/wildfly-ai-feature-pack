@@ -27,7 +27,9 @@ public class MCPServerSentConnectionCallBack implements ServerSentEventConnectio
         ROOT_LOGGER.debugf("Client connection initialized [%s]", id);
         String endpointPath = endpoint + '/' + id;
         sseConnection.getResponseHeaders().add(MCP_SESSION_ID_HEADER, id);
-        ServerSentEventResponder responder = new ServerSentEventResponder(sseConnection, id);
+        // Legacy HTTP+SSE transport: this GET connection is the client's only channel for the whole
+        // session, so it must never be auto-closed after the initialize response.
+        ServerSentEventResponder responder = new ServerSentEventResponder(sseConnection, id, false);
         connectionManager.add(responder);
         ROOT_LOGGER.debugf("Sending endpoint [%s]", endpointPath);
         responder.send("endpoint", endpointPath);

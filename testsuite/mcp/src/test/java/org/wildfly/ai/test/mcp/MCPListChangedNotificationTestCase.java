@@ -89,6 +89,7 @@ public class MCPListChangedNotificationTestCase {
                     capture.sseReaderThread.interrupt();
                 }
                 capture.sseConnection.disconnect();
+                capture.notificationStreamConnection.disconnect();
             }
         } catch (Exception e) {
             try {
@@ -149,6 +150,7 @@ public class MCPListChangedNotificationTestCase {
                     capture.sseReaderThread.interrupt();
                 }
                 capture.sseConnection.disconnect();
+                capture.notificationStreamConnection.disconnect();
             }
         } catch (Exception e) {
             try {
@@ -168,6 +170,7 @@ public class MCPListChangedNotificationTestCase {
             deployer.undeploy(DEPLOYMENT_NAME);
             collectNotifications(capture1, 3);
             capture1.sseConnection.disconnect();
+            capture1.notificationStreamConnection.disconnect();
 
             // Second cycle: re-deploy, reconnect, verify tools, then undeploy again
             deployer.deploy(DEPLOYMENT_NAME);
@@ -202,6 +205,7 @@ public class MCPListChangedNotificationTestCase {
                     capture2.sseReaderThread.interrupt();
                 }
                 capture2.sseConnection.disconnect();
+                capture2.notificationStreamConnection.disconnect();
             }
         } catch (Exception e) {
             try {
@@ -282,8 +286,63 @@ public class MCPListChangedNotificationTestCase {
                 {"jsonrpc":"2.0","method":"notifications/initialized"}""";
         postToStreamable(sessionId, initializedMessage);
 
-        return new NotificationCapture(sseConnection, sseReaderThread, serverInitiatedMessages,
+        // The initialize POST's own SSE stream is closed by the server once its response is sent; server
+        // pushes (list-changed notifications, etc.) for the rest of the session arrive over a dedicated GET
+        // stream instead, same as the reference MCP SDK client opens after notifications/initialized.
+        HttpURLConnection notificationStream = openNotificationStream(sessionId, serverInitiatedMessages, pendingResponses);
+
+        return new NotificationCapture(sseConnection, sseReaderThread, notificationStream, serverInitiatedMessages,
                 pendingResponses, nextId, sessionId);
+    }
+
+    private HttpURLConnection openNotificationStream(String sessionId, BlockingQueue<String> serverInitiatedMessages,
+            ConcurrentHashMap<Long, CompletableFuture<String>> pendingResponses) throws Exception {
+        URL streamUrl = new URL("http://127.0.0.1:8080/" + DEPLOYMENT_NAME + "/stream");
+        HttpURLConnection conn = (HttpURLConnection) streamUrl.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Accept", "text/event-stream");
+        conn.setRequestProperty("mcp-session-id", sessionId);
+        conn.setConnectTimeout(5000);
+        conn.setReadTimeout(0);
+
+        int statusCode = conn.getResponseCode();
+        assertThat(statusCode).as("GET notification stream should be accepted").isEqualTo(200);
+
+        Thread reader = new Thread(() -> {
+            try (BufferedReader br = new BufferedReader(
+                    new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    if (line.startsWith("data:")) {
+                        String data = line.substring(5).trim();
+                        if (data.isEmpty()) {
+                            continue;
+                        }
+                        try {
+                            JsonObject json = Json.createReader(new StringReader(data)).readObject();
+                            boolean isResponse = json.containsKey("result") || json.containsKey("error");
+                            if (isResponse && json.containsKey("id")) {
+                                long id = json.getJsonNumber("id").longValue();
+                                CompletableFuture<String> future = pendingResponses.remove(id);
+                                if (future != null) {
+                                    future.complete(data);
+                                    continue;
+                                }
+                            }
+                        } catch (Exception e) {
+                            // treat as server-initiated
+                        }
+                        serverInitiatedMessages.offer(data);
+                    }
+                }
+            } catch (Exception e) {
+                // Connection closed — expected during undeploy/disconnect
+            }
+        }, "notification-stream-reader");
+        reader.setDaemon(true);
+        reader.start();
+
+        return conn;
     }
 
     private List<String> collectNotifications(NotificationCapture capture, int expectedCount) throws InterruptedException {
@@ -381,6 +440,7 @@ public class MCPListChangedNotificationTestCase {
     private record NotificationCapture(
             HttpURLConnection sseConnection,
             Thread sseReaderThread,
+            HttpURLConnection notificationStreamConnection,
             BlockingQueue<String> serverInitiatedMessages,
             ConcurrentHashMap<Long, CompletableFuture<String>> pendingResponses,
             AtomicLong nextId,

@@ -22,7 +22,7 @@
         <jboss.home>${project.build.directory}/server</jboss.home>
         <mcp.server.url>http://localhost:8080/mcp/stream</mcp.server.url>
         <conformance.baseline.dir>${project.basedir}/src/test/resources</conformance.baseline.dir>
-        <version.mcp.conformance>0.2.0-alpha.11</version.mcp.conformance>
+        <version.mcp.conformance>0.2.0-alpha.12</version.mcp.conformance>
     </properties>
 
     <dependencies>
