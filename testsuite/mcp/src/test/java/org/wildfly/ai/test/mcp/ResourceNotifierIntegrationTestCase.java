@@ -73,6 +73,8 @@ public class ResourceNotifierIntegrationTestCase extends AbstractMCPIntegrationT
     @ParameterizedTest
     @MethodSource("notifierToolNames")
     public void testResourceNotifierNotificationSent(String toolName) throws Exception {
+        openNotificationStream();
+
         String subscribeResponse = sendAndReceive("resources/subscribe", Json.createObjectBuilder()
                 .add("uri", TestMCPResourceNotifier.NOTIFIER_RESOURCE_URI)
                 .build());

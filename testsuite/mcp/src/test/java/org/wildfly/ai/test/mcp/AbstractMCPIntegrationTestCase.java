@@ -58,6 +58,8 @@ abstract class AbstractMCPIntegrationTestCase {
     private String sessionId;
     private Thread sseReaderThread;
     private HttpURLConnection sseConnection;
+    private Thread notificationStreamReaderThread;
+    private HttpURLConnection notificationStreamConnection;
     private final List<Thread> perPostSseReaders = new CopyOnWriteArrayList<>();
 
     protected final AtomicLong nextId = new AtomicLong(1);
@@ -99,6 +101,12 @@ abstract class AbstractMCPIntegrationTestCase {
         }
         if (sseConnection != null) {
             sseConnection.disconnect();
+        }
+        if (notificationStreamReaderThread != null) {
+            notificationStreamReaderThread.interrupt();
+        }
+        if (notificationStreamConnection != null) {
+            notificationStreamConnection.disconnect();
         }
     }
 
@@ -261,6 +269,43 @@ abstract class AbstractMCPIntegrationTestCase {
         }
 
         return statusCode;
+    }
+
+    protected void openNotificationStream() throws Exception {
+        if (notificationStreamConnection != null) {
+            return;
+        }
+
+        URL streamUrl = new URL(deploymentUrl, "stream");
+        notificationStreamConnection = (HttpURLConnection) streamUrl.openConnection();
+        notificationStreamConnection.setRequestMethod("GET");
+        notificationStreamConnection.setRequestProperty("Accept", "text/event-stream");
+        notificationStreamConnection.setRequestProperty("mcp-session-id", sessionId);
+        configureRequestHeaders(notificationStreamConnection);
+        notificationStreamConnection.setConnectTimeout(5000);
+        notificationStreamConnection.setReadTimeout(0);
+
+        int statusCode = notificationStreamConnection.getResponseCode();
+        assertThat(statusCode).as("GET notification stream should be accepted").isEqualTo(200);
+
+        notificationStreamReaderThread = new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(notificationStreamConnection.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.startsWith("data:")) {
+                        String data = line.substring(5).trim();
+                        if (!data.isEmpty()) {
+                            dispatchSseEvent(data);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // Connection closed or read error - expected during shutdown
+            }
+        }, "notification-stream-reader");
+        notificationStreamReaderThread.setDaemon(true);
+        notificationStreamReaderThread.start();
     }
 
     protected void configureRequestHeaders(HttpURLConnection conn) {
