@@ -91,20 +91,34 @@ public class StreamableHttpHandler implements HttpHandler {
 
         if (Methods.GET.equals(exchange.getRequestMethod())) {
             String sessionId = exchange.getRequestHeaders().getFirst(MCP_SESSION_ID_HEADER);
-            if (sessionId != null) {
-                MCPConnection existing = connectionManager.get(sessionId);
-                if (existing == null) {
-                    ROOT_LOGGER.unknownSession(sessionId);
-                    sendJsonError(exchange, 404, null, JsonRPC.INVALID_REQUEST,
-                            ROOT_LOGGER.unknownSessionError(sessionId));
-                    return;
-                }
-                exchange.getResponseHeaders().put(MCP_SESSION_ID_HEADER, sessionId);
+            if (sessionId == null) {
+                // No session yet: a GET listening stream can't be tied to anything. Clients (e.g. the
+                // reference SDK) treat 405 here as an expected "no pre-session SSE" signal and retry with a
+                // session-bound GET once they have one, rather than being left with an orphaned connection.
+                exchange.setStatusCode(405);
+                exchange.endExchange();
+                return;
             }
+            MCPConnection existing = connectionManager.get(sessionId);
+            if (existing == null) {
+                ROOT_LOGGER.unknownSession(sessionId);
+                sendJsonError(exchange, 404, null, JsonRPC.INVALID_REQUEST,
+                        ROOT_LOGGER.unknownSessionError(sessionId));
+                return;
+            }
+            exchange.getResponseHeaders().put(MCP_SESSION_ID_HEADER, sessionId);
             exchange.getResponseHeaders().put(CONTENT_TYPE, "text/event-stream");
             setCorsHeaders(exchange);
             exchange.getResponseHeaders().put(CACHE_CONTROL, "no-cache");
             this.sseHandler.handleRequest(exchange);
+            return;
+        }
+        if (Methods.DELETE.equals(exchange.getRequestMethod())) {
+            // Per the Streamable HTTP spec, a client MAY send DELETE with Mcp-Session-Id to explicitly
+            // terminate a session it no longer needs, letting the server free resources immediately instead
+            // of waiting for the idle timeout. This is routine goodbye traffic (e.g. the reference SDK's
+            // terminateSession()), not an error condition.
+            handleSessionTermination(exchange);
             return;
         }
         if (!Methods.POST.equals(exchange.getRequestMethod())) {
@@ -280,10 +294,11 @@ public class StreamableHttpHandler implements HttpHandler {
                 if (exchangeDone.get()) {
                     return;
                 }
-                if (message.containsKey("method")) {
-                    sseConnection.send(message);
-                    return;
-                }
+                // Server-initiated requests (elicitation/create, sampling/createMessage) raised while this
+                // request is in flight go out over this same per-POST stream: the exchange is guaranteed open
+                // at this point (it's blocked below on responseLatch awaiting the round-trip), so there's no
+                // need to route them through the session's primary connection, which may have already been
+                // closed (e.g. right after sending the initialize response).
                 try {
                     int id = sseConnection.lastEventId();
                     byte[] event = ("event: message\nid: " + id + "\ndata: " + message.toString() + "\n\n")
@@ -549,6 +564,32 @@ public class StreamableHttpHandler implements HttpHandler {
             }
         }
         return false;
+    }
+
+    private void handleSessionTermination(HttpServerExchange exchange) {
+        String sessionId = exchange.getRequestHeaders().getFirst(MCP_SESSION_ID_HEADER);
+        if (sessionId == null) {
+            sendJsonError(exchange, 400, null, JsonRPC.INVALID_REQUEST,
+                    ROOT_LOGGER.missingSessionIdForTermination());
+            return;
+        }
+        MCPConnection connection = connectionManager.get(sessionId);
+        if (connection == null) {
+            ROOT_LOGGER.unknownSession(sessionId);
+            sendJsonError(exchange, 404, null, JsonRPC.INVALID_REQUEST,
+                    ROOT_LOGGER.unknownSessionError(sessionId));
+            return;
+        }
+        ROOT_LOGGER.debugf("Session [%s] explicitly terminated by client DELETE", sessionId);
+        // Same cleanup as an abrupt disconnect or the q/close JSON-RPC method: cancel any in-flight task,
+        // release tool/resource/subscription bookkeeping, then remove and close the connection (which also
+        // closes its notification streams, if any).
+        connection.cancel();
+        handler.cleanupConnection(connection);
+        connectionManager.remove(sessionId);
+        exchange.setStatusCode(204);
+        setCorsHeaders(exchange);
+        exchange.endExchange();
     }
 
     private void handleStatelessRequest(HttpServerExchange exchange, JsonObject content) {

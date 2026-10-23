@@ -40,9 +40,17 @@ public class MCPStreamableConnectionCallBack implements ServerSentEventConnectio
         }
         // POST — create the primary responder and process the initial message
         ROOT_LOGGER.debugf("Client connection initialized [%s]", id);
-        ServerSentEventResponder connection = new ServerSentEventResponder(sseConnection, id);
+        // Streamable HTTP (SEP-1699): the initialize POST's SSE stream is closed once its response is sent;
+        // the client re-establishes a listening stream separately via GET (see the pending == null branch above).
+        ServerSentEventResponder connection = new ServerSentEventResponder(sseConnection, id, true);
         connectionManager.add(connection);
         sseConnection.addCloseTask(channel -> {
+            if (connection.isPrimaryChannelClosedIntentionally()) {
+                // The server closed this channel itself right after sending the initialize response;
+                // the session stays alive (the client re-establishes a listening stream separately).
+                ROOT_LOGGER.debugf("Initial SSE channel for session [%s] closed after initialize response; session remains active", id);
+                return;
+            }
             ROOT_LOGGER.debugf("SSE channel closed, cleaning up connection [%s]", id);
             connection.cancel();
             handler.cleanupConnection(connection);
