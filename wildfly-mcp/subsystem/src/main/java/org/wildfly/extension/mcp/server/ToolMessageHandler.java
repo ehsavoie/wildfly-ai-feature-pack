@@ -98,6 +98,8 @@ import org.wildfly.mcp.api.ListChangeNotifier;
 import org.wildfly.extension.mcp.api.ClientCapability;
 import org.wildfly.extension.mcp.api.InitializeRequest;
 import org.wildfly.mcp.api.MissingCapabilityException;
+import org.wildfly.extension.mcp.injection.resources.ResourceNotifier;
+import org.wildfly.extension.mcp.injection.resources.ResourceNotifierHolder;
 import org.wildfly.extension.mcp.injection.tool.ArgumentMetadata;
 import org.wildfly.extension.mcp.injection.tool.MCPFeatureMetadata;
 import org.wildfly.extension.mcp.injection.tool.MCPTool;
@@ -123,12 +125,14 @@ public class ToolMessageHandler {
     private final Map<String, JsonObject> toolJsonCache = new ConcurrentHashMap<>();
     // Tools whose schema generation failed permanently for this deployment — skipped on every tools/list.
     private final Set<String> failedToolNames = ConcurrentHashMap.newKeySet();
+    private final ResourceMessageHandler resourceHandler;
 
     ToolMessageHandler(WildFlyMCPRegistry registry, ClassLoader classLoader, ExecutorService executorService, int pageSize) {
-        this(registry, classLoader, executorService, pageSize, null);
+        this(registry, classLoader, executorService, pageSize, null, null);
     }
 
-    ToolMessageHandler(WildFlyMCPRegistry registry, ClassLoader classLoader, ExecutorService executorService, int pageSize, RequestStateCodec requestStateCodec) {
+    ToolMessageHandler(WildFlyMCPRegistry registry, ClassLoader classLoader, ExecutorService executorService, int pageSize,
+            RequestStateCodec requestStateCodec, ResourceMessageHandler resourceHandler) {
         if (pageSize < 0) {
             throw ROOT_LOGGER.invalidPageSize(pageSize);
         }
@@ -140,6 +144,7 @@ public class ToolMessageHandler {
         this.executorService = executorService;
         this.pageSize = pageSize;
         this.requestStateCodec = requestStateCodec;
+        this.resourceHandler = resourceHandler;
     }
 
     void setListChangeNotifier(ListChangeNotifier notifier) {
@@ -214,7 +219,8 @@ public class ToolMessageHandler {
                             || Progress.class.isAssignableFrom(clazz)
                             || ClientCapabilities.class.isAssignableFrom(clazz)
                             || ListChangeNotifier.class.isAssignableFrom(clazz)
-                            || InputResponses.class.isAssignableFrom(clazz))) {
+                            || InputResponses.class.isAssignableFrom(clazz)
+                            || ResourceNotifier.class.isAssignableFrom(clazz))) {
                 continue; // injected by the framework, not a client-supplied argument
             }
             properties.add(a.name(), generateInputSchema(a.type(), a));
@@ -426,7 +432,7 @@ public class ToolMessageHandler {
         final ClassLoader prevCL = WildFlySecurityManager.getCurrentContextClassLoaderPrivileged();
         try {
             WildFlySecurityManager.setCurrentContextClassLoaderPrivileged(classLoader);
-            connection.task(executorService.submit(() -> runWithCDIContext(connection, responder, finalProgressToken, requestMetadata, listChangeNotifier, inputResponses, () -> {
+            connection.task(executorService.submit(() -> runWithCDIContext(connection, responder, finalProgressToken, requestMetadata, listChangeNotifier, resourceHandler, inputResponses, () -> {
                 try {
                     MethodMetadata methodMetadata = metadata.method();
                     Class<?> clazz = classLoader.loadClass(methodMetadata.declaringClassName());
@@ -576,6 +582,8 @@ public class ToolMessageHandler {
                 ret[idx] = ListChangeNotifierHolder.get();
             } else if (arg.type() instanceof Class<?> clazz && InputResponses.class.isAssignableFrom(clazz)) {
                 ret[idx] = InputResponsesHolder.get();
+            } else if (arg.type() instanceof Class<?> clazz && ResourceNotifier.class.isAssignableFrom(clazz)) {
+                ret[idx] = ResourceNotifierHolder.get();
             } else if (arg.isHeader()) {
                 String headerValue = mcpHeaders.get(arg.headerName().toLowerCase());
                 if (headerValue == null) {

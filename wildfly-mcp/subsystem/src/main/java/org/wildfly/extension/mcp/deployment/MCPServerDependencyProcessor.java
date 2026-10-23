@@ -55,6 +55,7 @@ import org.wildfly.mcp.api.tool.InputSchema;
 import org.wildfly.mcp.api.tool.OutputSchema;
 import org.wildfly.mcp.api.ListChangeNotifier;
 import org.wildfly.mcp.api.elicitation.ElicitationSender;
+import org.wildfly.extension.mcp.injection.resources.ResourceNotifier;
 import org.mcpjava.server.progress.Progress;
 import org.mcpjava.server.tools.Tool;
 import org.mcpjava.server.tools.ToolArg;
@@ -142,6 +143,7 @@ public class MCPServerDependencyProcessor implements DeploymentUnitProcessor {
 
     private static final DotName ELICITATION_SENDER = DotName.createSimple(ElicitationSender.class);
     private static final DotName PROGRESS = DotName.createSimple(Progress.class);
+    private static final DotName RESOURCE_NOTIFIER = DotName.createSimple(ResourceNotifier.class);
     private static final DotName COMPLETE_CONTEXT = DotName.createSimple(CompletionContext.class);
     private static final DotName INPUT_SCHEMA = DotName.createSimple(InputSchema.class);
     private static final DotName OUTPUT_SCHEMA = DotName.createSimple(OutputSchema.class);
@@ -180,6 +182,8 @@ public class MCPServerDependencyProcessor implements DeploymentUnitProcessor {
                 } else if (INPUT_RESPONSES.equals(paramTypeName)) {
                     arguments.add(new ArgumentMetadata(param.name(), "", false,
                             org.wildfly.mcp.api.tool.InputResponses.class));
+                } else if (RESOURCE_NOTIFIER.equals(paramTypeName)) {
+                    arguments.add(new ArgumentMetadata(param.name(), "", false, ResourceNotifier.class));
                 } else {
                     AnnotationInstance toolArgAnnotation = param.annotation(toolArg);
                     if (toolArgAnnotation != null) {

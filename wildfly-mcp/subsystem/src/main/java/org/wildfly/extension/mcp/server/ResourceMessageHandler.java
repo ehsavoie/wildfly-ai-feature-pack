@@ -236,7 +236,7 @@ public class ResourceMessageHandler {
         final ClassLoader prevCL = WildFlySecurityManager.getCurrentContextClassLoaderPrivileged();
         try {
             WildFlySecurityManager.setCurrentContextClassLoaderPrivileged(classLoader);
-            connection.task(executorService.submit(() -> runWithCDIContext(connection, responder, MCPServerUtils.extractProgressToken(params), () -> {
+            connection.task(executorService.submit(() -> runWithCDIContext(connection, responder, MCPServerUtils.extractProgressToken(params), this, () -> {
                 try {
                     MethodMetadata methodMetadata = metadata.method();
                     Class<?> clazz = classLoader.loadClass(methodMetadata.declaringClassName());

@@ -84,16 +84,16 @@ public class MCPMessageHandler {
         int pageSize = config.pageSize();
         this.connectionManager = connectionManager;
         this.subscriptionManager = new SubscriptionManager();
-        this.toolHandler = new ToolMessageHandler(registry, classLoader, executorService, pageSize, requestStateCodec);
+        this.resourceHandler = new ResourceMessageHandler(registry, classLoader, executorService, pageSize, this.subscriptionManager, connectionManager);
+        this.resourceHandler.setStreamNotifier(this::notifyResourceUpdatedOnStreams);
+        this.promptHandler = new PromptMessageHandler(registry, classLoader, executorService, pageSize, requestStateCodec, resourceHandler);
+        this.toolHandler = new ToolMessageHandler(registry, classLoader, executorService, pageSize, requestStateCodec, resourceHandler);
         this.toolHandler.setListChangeNotifier(new org.wildfly.mcp.api.ListChangeNotifier() {
             @Override public void notifyToolsChanged() { notifySubscriptionStreams("toolsListChanged"); }
             @Override public void notifyPromptsChanged() { notifySubscriptionStreams("promptsListChanged"); }
             @Override public void notifyResourcesChanged() { notifySubscriptionStreams("resourcesListChanged"); }
         });
-        this.promptHandler = new PromptMessageHandler(registry, classLoader, executorService, pageSize, requestStateCodec);
-        this.resourceHandler = new ResourceMessageHandler(registry, classLoader, executorService, pageSize, this.subscriptionManager, connectionManager);
-        this.resourceHandler.setStreamNotifier(this::notifyResourceUpdatedOnStreams);
-        this.resourceTemplateHandler = new ResourceTemplateMessageHandler(registry, classLoader, executorService, pageSize);
+        this.resourceTemplateHandler = new ResourceTemplateMessageHandler(registry, classLoader, executorService, pageSize, resourceHandler);
         this.completionHandler = new CompletionHandler(registry, classLoader);
         this.serverInfo = new HashMap<>();
         Map<String, Object> info = new HashMap<>();
